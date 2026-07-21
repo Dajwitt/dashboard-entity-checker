@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .coordinator import DashboardEntityCheckerCoordinator
@@ -19,7 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Dashboard Entity Checker from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = DashboardEntityCheckerCoordinator(hass, entry.data)
+    coordinator = DashboardEntityCheckerCoordinator(
+        hass, {**entry.data, **entry.options}
+    )
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -29,7 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register scan_now service
     async def handle_scan_now(call: ServiceCall) -> None:
         """Handle the scan_now service call."""
-        await coordinator.async_request_refresh()
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise HomeAssistantError(
+                f"Dashboard {coordinator.dashboard_url} konnte nicht geladen werden."
+            )
 
     hass.services.async_register(DOMAIN, "scan_now", handle_scan_now)
 

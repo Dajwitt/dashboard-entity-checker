@@ -3,11 +3,11 @@
   "name": "Dashboard Entity Checker",
   "codeowners": ["@Dajwitt"],
   "config_flow": true,
-  "dependencies": ["lovelace"],
+  "dependencies": ["lovelace", "persistent_notification"],
   "documentation": "https://github.com/Dajwitt/dashboard-entity-checker",
   "integration_type": "service",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Dajwitt/dashboard-entity-checker/issues",
   "single_config_entry": true,
-  "version": "0.1.2"
+  "version": "0.1.3"
 }

@@ -12,6 +12,7 @@ Home Assistant integration that scans your Lovelace dashboards for **ghost entit
 - Detects missing/deleted entities (ghosts)
 - Filters out service calls that look like entity IDs
 - Reports results via a sensor entity
+- Creates one persistent notification and removes it after a clean scan
 - Config Flow — no YAML configuration needed
 
 ## Installation
@@ -32,7 +33,7 @@ Copy the `custom_components/dashboard_entity_checker` folder to your Home Assist
 2. Search for "Dashboard Entity Checker"
 3. Select the dashboard to check (default: `my-ha-dashboard`)
 4. Set the scan interval (default: 5 minutes)
-5. The notification setting is reserved and has no effect until Phase 3
+5. Enable or disable persistent notifications
 
 ## Usage
 
@@ -58,6 +59,6 @@ Triggers an immediate scan of the configured dashboard.
 
 ## Development Status
 
-- **v0.1.2** (current): Phase 2 — direct entity IDs, view assignment and state/registry existence checks
+- **v0.1.3** (current): Phase 3 — sensor plus persistent notification with automatic update/removal
 - **v0.2.0** (planned): Button-Card JavaScript, decluttering templates and diagnostics extensions
 - **v0.3.0** (planned): Decluttering template support, multiple dashboards
