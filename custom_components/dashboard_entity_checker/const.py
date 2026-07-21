@@ -4,6 +4,14 @@ DOMAIN = "dashboard_entity_checker"
 NAME = "Dashboard Entity Checker"
 VERSION = "0.1.0"
 
+CONF_DASHBOARD = "dashboard_url_path"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_NOTIFICATIONS = "notifications"
+
+DEFAULT_DASHBOARD = "my-ha-dashboard"
+DEFAULT_SCAN_INTERVAL = 5  # minutes
+DEFAULT_NOTIFICATIONS = True
+
 # Entity domains to scan for in dashboard configs
 ENTITY_DOMAINS = [
     "alarm_control_panel", "automation", "binary_sensor", "button", "calendar",

@@ -1,11 +1,13 @@
 {
   "domain": "dashboard_entity_checker",
   "name": "Dashboard Entity Checker",
-  "codeowners": ["@Dajwitt"],
+  "version": "0.1.0",
   "config_flow": true,
+  "single_config_entry": true,
+  "integration_type": "service",
   "documentation": "https://github.com/Dajwitt/dashboard-entity-checker",
   "issue_tracker": "https://github.com/Dajwitt/dashboard-entity-checker/issues",
-  "requirements": [],
-  "version": "0.1.0",
+  "codeowners": ["@Dajwitt"],
+  "dependencies": ["lovelace"],
   "iot_class": "local_polling"
 }

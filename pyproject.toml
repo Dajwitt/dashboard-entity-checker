@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=75.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dashboard-entity-checker"
+version = "0.1.0"
+description = "Home Assistant integration that scans Lovelace dashboards for ghost entities"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+
+[tool.setuptools.packages.find]
+include = ["custom_components*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

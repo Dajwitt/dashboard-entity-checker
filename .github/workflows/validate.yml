@@ -1,0 +1,39 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install homeassistant-stubs
+
+      - name: Run hassfest
+        uses: home-assistant/actions/hassfest@master
+
+      - name: Validate HACS
+        uses: hacs/action@main
+        with:
+          category: integration
+
+      - name: Validate JSON
+        run: |
+          python -m json.tool custom_components/dashboard_entity_checker/manifest.json > /dev/null
+          python -m json.tool custom_components/dashboard_entity_checker/strings.json > /dev/null
+          python -m json.tool custom_components/dashboard_entity_checker/translations/en.json > /dev/null
+          python -m json.tool custom_components/dashboard_entity_checker/translations/de.json > /dev/null
+          python -m json.tool hacs.json > /dev/null

@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dashboard Entity Checker",
+        "description": "Richte den Dashboard Entity Checker ein.",
+        "data": {
+          "dashboard_url_path": "Dashboard",
+          "scan_interval": "Prüfintervall (Minuten)",
+          "notifications": "Benachrichtigungen aktivieren"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Es ist nur eine Instanz des Dashboard Entity Checkers erlaubt."
+    },
+    "error": {
+      "dashboard_not_found": "Dashboard konnte nicht geladen werden. Prüfe den URL-Pfad."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Dashboard Entity Checker Optionen",
+        "description": "Konfiguriere den Dashboard Entity Checker.",
+        "data": {
+          "dashboard_url_path": "Dashboard",
+          "scan_interval": "Prüfintervall (Minuten)",
+          "notifications": "Benachrichtigungen aktivieren"
+        }
+      }
+    }
+  }
+}

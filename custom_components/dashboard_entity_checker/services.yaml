@@ -1,11 +1,4 @@
-check_dashboard:
-  name: Check Dashboard
-  description: Scan a Lovelace dashboard for ghost entities (references to non-existing entities).
-  fields:
-    dashboard_url_path:
-      name: Dashboard URL Path
-      description: The URL path of the dashboard to check (e.g. "my-ha-dashboard").
-      required: true
-      example: "my-ha-dashboard"
-      selector:
-        text: {}
+scan_now:
+  name: Scan Dashboard Now
+  description: Immediately scan the configured dashboard for entity references.
+  fields: {}
