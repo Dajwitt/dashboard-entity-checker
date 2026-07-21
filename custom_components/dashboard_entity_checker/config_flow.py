@@ -8,8 +8,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.helpers.selector import selector
-
 from .const import (
     CONF_DASHBOARD,
     CONF_NOTIFICATIONS,
@@ -20,6 +18,7 @@ from .const import (
     DOMAIN,
     NAME,
 )
+from .dashboard import DashboardError, load_dashboard
 
 
 class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,10 +39,8 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
             # Validate dashboard can be loaded
             dashboard_url = user_input[CONF_DASHBOARD]
             try:
-                from .dashboard import load_dashboard
-
                 await load_dashboard(self.hass, dashboard_url)
-            except Exception:
+            except DashboardError:
                 errors[CONF_DASHBOARD] = "dashboard_not_found"
 
             if not errors:
@@ -130,14 +127,18 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
 async def _get_dashboards(hass) -> dict[str, str]:
     """Get available Lovelace dashboards as {url_path: title} dict."""
     try:
-        dashboards = await hass.data["lovelace"]["dashboards"].async_get_dashboards()
+        dashboards = hass.data["lovelace"].dashboards
     except (KeyError, AttributeError):
         return {DEFAULT_DASHBOARD: DEFAULT_DASHBOARD}
 
     result: dict[str, str] = {}
-    for db in dashboards:
-        url_path = db.get("url_path", "")
-        title = db.get("title", url_path)
+    for url_path, dashboard in dashboards.items():
+        # The default dashboard uses None as its internal key. Version 0.1
+        # targets named dashboards only, especially my-ha-dashboard.
+        if url_path is None:
+            continue
+        metadata = dashboard.config or {}
+        title = metadata.get("title", url_path)
         if url_path:
             result[url_path] = title
 

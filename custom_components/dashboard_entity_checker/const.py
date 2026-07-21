@@ -2,7 +2,7 @@
 
 DOMAIN = "dashboard_entity_checker"
 NAME = "Dashboard Entity Checker"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 CONF_DASHBOARD = "dashboard_url_path"
 CONF_SCAN_INTERVAL = "scan_interval"

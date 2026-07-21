@@ -45,32 +45,28 @@ async def load_dashboard(hass: HomeAssistant, url_path: str) -> dict[str, Any]:
         DashboardConfigInvalid: Config is missing or invalid.
     """
     try:
-        dashboards = hass.data["lovelace"]["dashboards"]
-    except KeyError as exc:
+        lovelace_data = hass.data["lovelace"]
+        dashboards = lovelace_data.dashboards
+    except (KeyError, AttributeError) as exc:
         raise DashboardNotLoaded(
             "Lovelace dashboards not available"
         ) from exc
 
     # Get dashboard by URL path
-    dashboard = None
-    try:
-        dashboard = dashboards.async_get_dashboard(url_path)
-    except Exception as exc:
-        raise DashboardNotLoaded(
-            f"Error loading dashboard '{url_path}': {exc}"
-        ) from exc
+    dashboard = dashboards.get(url_path)
 
     if dashboard is None:
         raise DashboardNotFound(
             f"Dashboard '{url_path}' not found"
         )
 
-    # Get config
+    # Load config through LovelaceConfig. ``force=True`` ensures dashboard
+    # changes are visible immediately and avoids reading .storage directly.
     try:
-        config = dashboard.config
+        config = await dashboard.async_load(force=True)
     except Exception as exc:
-        raise DashboardConfigInvalid(
-            f"Dashboard '{url_path}' config is invalid: {exc}"
+        raise DashboardNotLoaded(
+            f"Dashboard '{url_path}' could not be loaded: {exc}"
         ) from exc
 
     if not config or not isinstance(config, dict):

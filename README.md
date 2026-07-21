@@ -58,6 +58,6 @@ Triggers an immediate scan of the configured dashboard.
 
 ## Development Status
 
-- **v0.1.0** (current): Phase 0+1 — Config Flow, dashboard loading via Lovelace API, sensor, diagnostics
+- **v0.1.1** (current): Phase 0+1 — Config Flow, dashboard loading via Lovelace API, sensor, diagnostics
 - **v0.2.0** (planned): Entity ID extraction, ghost detection, notifications
 - **v0.3.0** (planned): Decluttering template support, multiple dashboards

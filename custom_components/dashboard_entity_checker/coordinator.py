@@ -10,6 +10,7 @@ from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DASHBOARD,
@@ -60,7 +61,7 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
                 "checked_entities": 0,
                 "missing_entities": [],
                 "status": "OK",
-                "last_scan": self.hass.states.get("sensor.date_time"),
+                "last_scan": dt_util.now().isoformat(),
             }
         except DashboardError as exc:
             raise UpdateFailed(str(exc)) from exc
