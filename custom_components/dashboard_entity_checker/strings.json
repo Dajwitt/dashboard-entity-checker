@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dashboard Entity Checker",
+        "description": "Set up the Dashboard Entity Checker integration."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only one instance of Dashboard Entity Checker is allowed."
+    }
+  }
+}
