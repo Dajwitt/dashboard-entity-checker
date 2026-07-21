@@ -9,6 +9,7 @@ Home Assistant integration that scans your Lovelace dashboards for **ghost entit
 ## Features
 
 - Scans Lovelace dashboards for entity references
+- Detects references in Button-Card JavaScript, including comments
 - Detects missing/deleted entities (ghosts)
 - Filters out service calls that look like entity IDs
 - Reports results via a sensor entity
@@ -59,6 +60,6 @@ Triggers an immediate scan of the configured dashboard.
 
 ## Development Status
 
-- **v0.1.3** (current): Phase 3 — sensor plus persistent notification with automatic update/removal
-- **v0.2.0** (planned): Button-Card JavaScript, decluttering templates and diagnostics extensions
+- **v0.1.4** (current): Phase 4 — Button-Card JavaScript and comment references
+- **v0.2.0** (planned): Decluttering templates and diagnostics extensions
 - **v0.3.0** (planned): Decluttering template support, multiple dashboards
