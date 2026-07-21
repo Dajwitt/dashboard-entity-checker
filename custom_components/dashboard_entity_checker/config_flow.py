@@ -8,8 +8,15 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+
 from .const import (
     CONF_DASHBOARD,
+    CONF_DASHBOARDS,
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
     DEFAULT_DASHBOARD,
@@ -24,7 +31,7 @@ from .dashboard import DashboardError, load_dashboard
 class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dashboard Entity Checker."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -34,38 +41,27 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         errors: dict[str, str] = {}
-
         if user_input is not None:
-            # Validate dashboard can be loaded
-            dashboard_url = user_input[CONF_DASHBOARD]
-            try:
-                await load_dashboard(self.hass, dashboard_url)
-            except DashboardError:
-                errors[CONF_DASHBOARD] = "dashboard_not_found"
-
+            errors = await _validate_dashboard_selection(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(title=NAME, data=user_input)
 
-        # List available dashboards
         dashboards = await _get_dashboards(self.hass)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_DASHBOARD, default=DEFAULT_DASHBOARD
-                ): vol.In(dashboards),
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
-                vol.Required(
-                    CONF_NOTIFICATIONS, default=DEFAULT_NOTIFICATIONS
-                ): bool,
-            }
+        selected = (
+            _selected_dashboard_urls(user_input)
+            if user_input is not None
+            else [DEFAULT_DASHBOARD]
         )
+        _include_unavailable_selections(dashboards, selected)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=_dashboard_schema(
+                dashboards,
+                selected,
+                DEFAULT_SCAN_INTERVAL,
+                DEFAULT_NOTIFICATIONS,
+            ),
             errors=errors,
         )
 
@@ -88,45 +84,95 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage options."""
         errors: dict[str, str] = {}
-
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        dashboards = await _get_dashboards(self.hass)
         current = {**self.config_entry.data, **self.config_entry.options}
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_DASHBOARD,
-                    default=current.get(
-                        CONF_DASHBOARD, DEFAULT_DASHBOARD
-                    ),
-                ): vol.In(dashboards),
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=current.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
-                vol.Required(
-                    CONF_NOTIFICATIONS,
-                    default=current.get(
-                        CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS
-                    ),
-                ): bool,
-            }
-        )
+        if user_input is not None:
+            errors = await _validate_dashboard_selection(self.hass, user_input)
+            if not errors:
+                return self.async_create_entry(data=user_input)
+            current = user_input
+
+        dashboards = await _get_dashboards(self.hass)
+        selected = _selected_dashboard_urls(current)
+        _include_unavailable_selections(dashboards, selected)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=data_schema,
+            data_schema=_dashboard_schema(
+                dashboards,
+                selected,
+                current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                current.get(CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS),
+            ),
             errors=errors,
         )
 
 
+def _dashboard_schema(
+    dashboards: dict[str, str],
+    selected: list[str],
+    scan_interval: int,
+    notifications: bool,
+) -> vol.Schema:
+    """Build the shared config/options schema."""
+    options = [
+        {"value": url_path, "label": title}
+        for url_path, title in dashboards.items()
+    ]
+    return vol.Schema(
+        {
+            vol.Required(CONF_DASHBOARDS, default=selected): SelectSelector(
+                SelectSelectorConfig(
+                    options=options,
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                )
+            ),
+            vol.Required(
+                CONF_SCAN_INTERVAL, default=scan_interval
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
+            vol.Required(CONF_NOTIFICATIONS, default=notifications): bool,
+        }
+    )
+
+
+async def _validate_dashboard_selection(
+    hass, user_input: dict[str, Any]
+) -> dict[str, str]:
+    """Ensure at least one selected dashboard can be loaded."""
+    selected = _selected_dashboard_urls(user_input)
+    if not selected:
+        return {CONF_DASHBOARDS: "no_dashboard_selected"}
+
+    for dashboard_url in selected:
+        try:
+            await load_dashboard(hass, dashboard_url)
+        except DashboardError:
+            return {CONF_DASHBOARDS: "dashboard_not_found"}
+    return {}
+
+
+def _selected_dashboard_urls(data: dict[str, Any] | None) -> list[str]:
+    """Read multi-dashboard selection with legacy scalar fallback."""
+    if not data:
+        return []
+    raw = data.get(CONF_DASHBOARDS)
+    if isinstance(raw, (list, tuple)):
+        return [item for item in raw if isinstance(item, str) and item]
+    legacy = data.get(CONF_DASHBOARD)
+    return [legacy] if isinstance(legacy, str) and legacy else []
+
+
+def _include_unavailable_selections(
+    dashboards: dict[str, str], selected: list[str]
+) -> None:
+    """Keep deleted/temporarily unavailable selections visible in options."""
+    for dashboard_url in selected:
+        dashboards.setdefault(dashboard_url, dashboard_url)
+
+
 async def _get_dashboards(hass) -> dict[str, str]:
-    """Get available Lovelace dashboards as {url_path: title} dict."""
+    """Get available Lovelace dashboards as {url_path: title}."""
     try:
         dashboards = hass.data["lovelace"].dashboards
     except (KeyError, AttributeError):
@@ -134,8 +180,6 @@ async def _get_dashboards(hass) -> dict[str, str]:
 
     result: dict[str, str] = {}
     for url_path, dashboard in dashboards.items():
-        # The default dashboard uses None as its internal key. Version 0.1
-        # targets named dashboards only, especially my-ha-dashboard.
         if url_path is None:
             continue
         metadata = dashboard.config or {}
@@ -145,5 +189,4 @@ async def _get_dashboards(hass) -> dict[str, str]:
 
     if not result:
         result[DEFAULT_DASHBOARD] = DEFAULT_DASHBOARD
-
     return result

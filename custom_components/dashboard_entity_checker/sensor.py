@@ -70,8 +70,14 @@ def _sensor_attributes(coordinator) -> dict:
     """Build state attributes, including a failed latest scan."""
     data = coordinator.data or {}
     failed = not coordinator.last_update_success
+    dashboard_urls = getattr(
+        coordinator, "dashboard_urls", [coordinator.dashboard_url]
+    )
     return {
         "dashboard": data.get("dashboard_url", coordinator.dashboard_url),
+        "dashboards": data.get("dashboards", dashboard_urls),
+        "dashboards_loaded": data.get("dashboards_loaded", []),
+        "dashboard_errors": data.get("dashboard_errors", []),
         "scan_interval_minutes": coordinator.scan_interval_minutes,
         "dashboard_loaded": False if failed else data.get("dashboard_loaded", False),
         "status": "Fehler" if failed else data.get("status", "Warte auf ersten Scan"),
@@ -82,5 +88,9 @@ def _sensor_attributes(coordinator) -> dict:
         "views": data.get("views", []),
         "views_scanned": data.get("views_scanned", 0),
         "last_scan": str(data.get("last_scan", "")),
-        "last_error": str(coordinator.last_exception) if failed else None,
+        "last_error": (
+            str(coordinator.last_exception)
+            if failed
+            else data.get("last_error")
+        ),
     }

@@ -1,4 +1,4 @@
-"""Tests for Phase-3 persistent notifications."""
+"""Tests for persistent notifications."""
 
 from unittest.mock import patch
 
@@ -10,19 +10,31 @@ from custom_components.dashboard_entity_checker.coordinator import (
 )
 
 MISSING: list[MissingEntity] = [
-    {"entity": "media_player.echo_bad", "views": ["Home", "Bad"]},
-    {"entity": "sensor.old_temperature", "views": ["Wetter"]},
+    {
+        "entity": "media_player.echo_bad",
+        "locations": [
+            {"dashboard": "my-ha-dashboard", "views": ["Home", "Bad"]}
+        ],
+    },
+    {
+        "entity": "sensor.old_temperature",
+        "locations": [
+            {"dashboard": "my-ha-dashboard", "views": ["Wetter"]},
+            {"dashboard": "dashboard-test", "views": ["Home"]},
+        ],
+    },
 ]
 
 
-def test_notification_message_lists_entities_and_views() -> None:
-    """The notification body is readable and preserves every view."""
+def test_notification_message_lists_dashboards_and_views() -> None:
+    """The notification preserves every dashboard-to-view location."""
     assert _notification_message(MISSING) == (
         "media_player.echo_bad\n"
-        "- Ansicht: Home\n"
-        "- Ansicht: Bad\n\n"
+        "- my-ha-dashboard → Home\n"
+        "- my-ha-dashboard → Bad\n\n"
         "sensor.old_temperature\n"
-        "- Ansicht: Wetter"
+        "- my-ha-dashboard → Wetter\n"
+        "- dashboard-test → Home"
     )
 
 
@@ -39,7 +51,7 @@ def test_missing_entities_create_or_update_one_notification() -> None:
             "persistent_notification.async_dismiss"
         ) as dismiss,
     ):
-        _update_notification(hass, "my-ha-dashboard", MISSING, True)
+        _update_notification(hass, ["my-ha-dashboard"], MISSING, True)
 
     create.assert_called_once_with(
         hass,
@@ -48,6 +60,23 @@ def test_missing_entities_create_or_update_one_notification() -> None:
         notification_id=NOTIFICATION_ID,
     )
     dismiss.assert_not_called()
+
+
+def test_multiple_dashboards_use_neutral_notification_title() -> None:
+    """The body carries locations when more than one dashboard is selected."""
+    hass = object()
+    with patch(
+        "custom_components.dashboard_entity_checker.coordinator."
+        "persistent_notification.async_create"
+    ) as create:
+        _update_notification(
+            hass,
+            ["my-ha-dashboard", "dashboard-test"],
+            MISSING,
+            True,
+        )
+
+    assert create.call_args.kwargs["title"] == "Dashboard-Fehler"
 
 
 def test_clean_scan_dismisses_existing_notification() -> None:
@@ -63,7 +92,7 @@ def test_clean_scan_dismisses_existing_notification() -> None:
             "persistent_notification.async_dismiss"
         ) as dismiss,
     ):
-        _update_notification(hass, "my-ha-dashboard", [], True)
+        _update_notification(hass, ["my-ha-dashboard"], [], True)
 
     dismiss.assert_called_once_with(hass, NOTIFICATION_ID)
     create.assert_not_called()
@@ -76,6 +105,6 @@ def test_disabled_notifications_remove_stale_notification() -> None:
         "custom_components.dashboard_entity_checker.coordinator."
         "persistent_notification.async_dismiss"
     ) as dismiss:
-        _update_notification(hass, "my-ha-dashboard", MISSING, False)
+        _update_notification(hass, ["my-ha-dashboard"], MISSING, False)
 
     dismiss.assert_called_once_with(hass, NOTIFICATION_ID)

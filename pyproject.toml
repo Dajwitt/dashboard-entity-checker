@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dashboard-entity-checker"
-version = "0.1.6"
+version = "0.1.7"
 description = "Home Assistant integration that scans Lovelace dashboards for ghost entities"
 readme = "README.md"
 license = {text = "MIT"}

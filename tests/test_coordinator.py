@@ -1,4 +1,4 @@
-"""Tests for Phase-2 entity existence rules."""
+"""Tests for entity existence rules across dashboards."""
 
 from custom_components.dashboard_entity_checker.coordinator import _find_missing_entities
 
@@ -21,14 +21,27 @@ class FakeLookup:
 def test_only_entities_unknown_to_state_machine_and_registry_are_missing() -> None:
     """Unavailable states and registry-only entities still count as existing."""
     entities = {
-        "sensor.available": ["Home"],
-        "sensor.unavailable": ["Home"],
-        "sensor.registry_only": ["Details"],
-        "media_player.echo_bad": ["Home"],
+        "sensor.available": [
+            {"dashboard": "my-ha-dashboard", "views": ["Home"]}
+        ],
+        "sensor.unavailable": [
+            {"dashboard": "my-ha-dashboard", "views": ["Home"]}
+        ],
+        "sensor.registry_only": [
+            {"dashboard": "dashboard-test", "views": ["Details"]}
+        ],
+        "media_player.echo_bad": [
+            {"dashboard": "my-ha-dashboard", "views": ["Home"]}
+        ],
     }
     states = FakeLookup({"sensor.available", "sensor.unavailable"})
     registry = FakeLookup({"sensor.available", "sensor.registry_only"})
 
     assert _find_missing_entities(entities, states, registry) == [
-        {"entity": "media_player.echo_bad", "views": ["Home"]}
+        {
+            "entity": "media_player.echo_bad",
+            "locations": [
+                {"dashboard": "my-ha-dashboard", "views": ["Home"]}
+            ],
+        }
     ]

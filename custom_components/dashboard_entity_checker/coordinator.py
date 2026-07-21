@@ -6,7 +6,7 @@ import asyncio
 import logging
 from dataclasses import asdict
 from datetime import timedelta
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -17,8 +17,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DASHBOARD,
+    CONF_DASHBOARDS,
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
+    DEFAULT_DASHBOARD,
     DEFAULT_NOTIFICATIONS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -30,15 +32,25 @@ from .parser import parse_dashboard
 _LOGGER = logging.getLogger(__name__)
 
 
-class MissingEntity(TypedDict):
-    """A missing entity and the dashboard views using it."""
+class EntityLocation(TypedDict):
+    """Dashboard and views containing an entity reference."""
 
-    entity: str
+    dashboard: str
     views: list[str]
 
 
+class MissingEntity(TypedDict):
+    """A missing entity and all dashboard/view locations using it."""
+
+    entity: str
+    locations: list[EntityLocation]
+
+
+EntityReferences = dict[str, list[EntityLocation]]
+
+
 class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
-    """Load a dashboard and check its direct entity references."""
+    """Load configured dashboards and check their rendered entity references."""
 
     def __init__(
         self,
@@ -48,7 +60,9 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
         config_entry: ConfigEntry | None = None,
     ) -> None:
         """Initialize the coordinator."""
-        self.dashboard_url = entry_data[CONF_DASHBOARD]
+        self.dashboard_urls = _configured_dashboard_urls(entry_data)
+        # Kept as a compatibility property for existing service/error consumers.
+        self.dashboard_url = self.dashboard_urls[0]
         self.notifications_enabled = entry_data.get(
             CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS
         )
@@ -80,51 +94,142 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
             return await self._async_scan_data()
 
     async def _async_scan_data(self) -> dict:
-        """Load, parse and check the configured dashboard."""
-        try:
-            config = await load_dashboard(self.hass, self.dashboard_url)
-            parsed = parse_dashboard(config)
-            registry = er.async_get(self.hass)
+        """Load, parse and aggregate all configured dashboards."""
+        references: EntityReferences = {}
+        dashboard_views: dict[str, list[str]] = {}
+        templates_resolved: dict[str, dict[str, list[str]]] = {}
+        template_diagnostics: list[dict[str, Any]] = []
+        dashboard_errors: list[dict[str, str]] = []
+        dashboards_loaded: list[str] = []
 
-            missing_entities = _find_missing_entities(
-                parsed.entities, self.hass.states, registry
-            )
-            if _notification_needs_update(self.data, missing_entities):
-                _update_notification(
-                    self.hass,
-                    self.dashboard_url,
-                    missing_entities,
-                    self.notifications_enabled,
+        for dashboard_url in self.dashboard_urls:
+            try:
+                config = await load_dashboard(self.hass, dashboard_url)
+            except DashboardError as exc:
+                dashboard_errors.append(
+                    {"dashboard": dashboard_url, "error": str(exc)}
                 )
+                continue
 
-            return {
-                "dashboard_loaded": True,
-                "dashboard_url": self.dashboard_url,
-                "views": parsed.views,
-                "views_scanned": len(parsed.views),
-                "checked_entities": parsed.checked_entities,
-                "missing_entities": missing_entities,
-                "templates_resolved": parsed.templates,
-                "templates_resolved_count": len(parsed.templates),
-                "template_diagnostics": [
-                    asdict(diagnostic) for diagnostic in parsed.diagnostics
-                ],
-                "status": "Fehler gefunden" if missing_entities else "OK",
-                "last_scan": dt_util.now().isoformat(),
-            }
-        except DashboardError as exc:
+            parsed = parse_dashboard(config)
+            dashboards_loaded.append(dashboard_url)
+            dashboard_views[dashboard_url] = parsed.views
+            templates_resolved[dashboard_url] = parsed.templates
+            _merge_entity_references(references, dashboard_url, parsed.entities)
+            template_diagnostics.extend(
+                {"dashboard": dashboard_url, **asdict(diagnostic)}
+                for diagnostic in parsed.diagnostics
+            )
+
+        if not dashboards_loaded:
+            details = "; ".join(
+                f"{item['dashboard']}: {item['error']}"
+                for item in dashboard_errors
+            )
             raise UpdateFailed(
-                f"Dashboard {self.dashboard_url} konnte nicht geladen werden: {exc}"
-            ) from exc
+                f"Dashboards konnten nicht geladen werden: {details}"
+            )
+
+        registry = er.async_get(self.hass)
+        missing_entities = _find_missing_entities(
+            references, self.hass.states, registry
+        )
+        # On partial failure, preserve the previous notification. Removing or
+        # changing it from incomplete input could hide a real dashboard error.
+        if not self.notifications_enabled:
+            _update_notification(
+                self.hass,
+                self.dashboard_urls,
+                missing_entities,
+                False,
+            )
+        elif not dashboard_errors and _notification_needs_update(
+            self.data, missing_entities
+        ):
+            _update_notification(
+                self.hass,
+                self.dashboard_urls,
+                missing_entities,
+                self.notifications_enabled,
+            )
+
+        last_error = (
+            "; ".join(
+                f"Dashboard {item['dashboard']} konnte nicht geladen werden: "
+                f"{item['error']}"
+                for item in dashboard_errors
+            )
+            or None
+        )
+        return {
+            "dashboard_loaded": not dashboard_errors,
+            "dashboard_url": self.dashboard_url,
+            "dashboards": self.dashboard_urls,
+            "dashboards_loaded": dashboards_loaded,
+            "dashboard_errors": dashboard_errors,
+            "views": dashboard_views,
+            "views_scanned": sum(len(views) for views in dashboard_views.values()),
+            "checked_entities": len(references),
+            "missing_entities": missing_entities,
+            "templates_resolved": templates_resolved,
+            "templates_resolved_count": sum(
+                len(templates) for templates in templates_resolved.values()
+            ),
+            "template_diagnostics": template_diagnostics,
+            "status": (
+                "Teilweise fehlgeschlagen"
+                if dashboard_errors
+                else "Fehler gefunden"
+                if missing_entities
+                else "OK"
+            ),
+            "last_scan": dt_util.now().isoformat(),
+            "last_error": last_error,
+        }
+
+
+def _configured_dashboard_urls(entry_data: dict) -> list[str]:
+    """Normalize new multi-dashboard and legacy scalar configuration."""
+    raw_dashboards = entry_data.get(CONF_DASHBOARDS)
+    if isinstance(raw_dashboards, (list, tuple)):
+        candidates = raw_dashboards
+    else:
+        candidates = [entry_data.get(CONF_DASHBOARD, DEFAULT_DASHBOARD)]
+
+    result: list[str] = []
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate and candidate not in result:
+            result.append(candidate)
+    return result or [DEFAULT_DASHBOARD]
+
+
+def _merge_entity_references(
+    target: EntityReferences,
+    dashboard: str,
+    entities: dict[str, list[str]],
+) -> None:
+    """Merge one parsed dashboard into dashboard-aware entity locations."""
+    for entity_id, views in entities.items():
+        locations = target.setdefault(entity_id, [])
+        location = next(
+            (item for item in locations if item["dashboard"] == dashboard),
+            None,
+        )
+        if location is None:
+            locations.append({"dashboard": dashboard, "views": list(views)})
+            continue
+        for view in views:
+            if view not in location["views"]:
+                location["views"].append(view)
 
 
 def _find_missing_entities(
-    entities: dict[str, list[str]], states, registry
+    entities: EntityReferences, states, registry
 ) -> list[MissingEntity]:
     """Return IDs absent from both the state machine and entity registry."""
     return [
-        {"entity": entity_id, "views": views}
-        for entity_id, views in entities.items()
+        {"entity": entity_id, "locations": locations}
+        for entity_id, locations in entities.items()
         if states.get(entity_id) is None and registry.async_get(entity_id) is None
     ]
 
@@ -142,7 +247,7 @@ def _notification_needs_update(
 
 def _update_notification(
     hass: HomeAssistant,
-    dashboard: str,
+    dashboards: str | list[str],
     missing_entities: list[MissingEntity],
     enabled: bool,
 ) -> None:
@@ -151,20 +256,28 @@ def _update_notification(
         persistent_notification.async_dismiss(hass, NOTIFICATION_ID)
         return
 
+    dashboard_urls = [dashboards] if isinstance(dashboards, str) else dashboards
+    title = (
+        f"Dashboard-Fehler: {dashboard_urls[0]}"
+        if len(dashboard_urls) == 1
+        else "Dashboard-Fehler"
+    )
     persistent_notification.async_create(
         hass,
         _notification_message(missing_entities),
-        title=f"Dashboard-Fehler: {dashboard}",
+        title=title,
         notification_id=NOTIFICATION_ID,
     )
 
 
 def _notification_message(missing_entities: list[MissingEntity]) -> str:
-    """Build a readable notification body with entity and view names."""
+    """Build a readable body with dashboard-to-view locations."""
     blocks: list[str] = []
     for item in missing_entities:
-        entity_id = item["entity"]
-        views = item["views"]
-        view_lines = [f"- Ansicht: {view}" for view in views]
-        blocks.append("\n".join([entity_id, *view_lines]))
+        location_lines = [
+            f"- {location['dashboard']} → {view}"
+            for location in item["locations"]
+            for view in location["views"]
+        ]
+        blocks.append("\n".join([item["entity"], *location_lines]))
     return "\n\n".join(blocks)

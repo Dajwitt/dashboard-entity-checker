@@ -20,9 +20,11 @@ async def async_get_config_entry_diagnostics(
     coordinator = hass.data[DOMAIN].get(entry.entry_id)
 
     if coordinator is None:
+        current = {**entry.data, **entry.options}
         return {
             "integration_version": VERSION,
-            "dashboard": entry.data.get("dashboard_url_path", "unknown"),
+            "dashboard": current.get("dashboard_url_path", "unknown"),
+            "dashboards": current.get("dashboard_url_paths", []),
             "last_scan": None,
             "views": [],
             "views_scanned": 0,
@@ -41,6 +43,9 @@ async def async_get_config_entry_diagnostics(
         "dashboard": data.get(
             "dashboard_url", entry.data.get("dashboard_url_path", "unknown")
         ),
+        "dashboards": data.get("dashboards", coordinator.dashboard_urls),
+        "dashboards_loaded": data.get("dashboards_loaded", []),
+        "dashboard_errors": data.get("dashboard_errors", []),
         "scan_interval_minutes": coordinator.scan_interval_minutes,
         "dashboard_loaded": False if failed else data.get("dashboard_loaded", False),
         "last_scan": str(data.get("last_scan", "")) or None,

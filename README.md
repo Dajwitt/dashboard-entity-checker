@@ -13,6 +13,7 @@ Home Assistant integration that scans your Lovelace dashboards for **ghost entit
 - Resolves nested Decluttering Card templates, defaults and variables
 - Runs the first scan after Home Assistant startup and repeats it periodically
 - Serializes manual and scheduled scans and suppresses unchanged notifications
+- Selects and scans multiple dashboards with dashboard → view locations
 - Detects missing/deleted entities (ghosts)
 - Filters out service calls that look like entity IDs
 - Reports results via a sensor entity
@@ -63,6 +64,6 @@ Triggers an immediate scan of the configured dashboard.
 
 ## Development Status
 
-- **v0.1.6** (current): Phase 6 — automatic startup and periodic scans
+- **v0.1.7** (current): Phase 7 — multiple dashboards and aggregated locations
 - **v0.2.0** (planned): diagnostics and configuration extensions
-- **v0.3.0** (planned): multiple dashboards, ignore list and result-change events
+- **v0.3.0** (planned): ignore list and result-change events

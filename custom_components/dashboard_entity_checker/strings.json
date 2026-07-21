@@ -5,7 +5,7 @@
         "title": "Dashboard Entity Checker",
         "description": "Set up the Dashboard Entity Checker integration.",
         "data": {
-          "dashboard_url_path": "Dashboard",
+          "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
           "notifications": "Enable notifications"
         }
@@ -15,7 +15,8 @@
       "single_instance_allowed": "Only one instance of Dashboard Entity Checker is allowed."
     },
     "error": {
-      "dashboard_not_found": "Dashboard could not be loaded. Check the URL path."
+      "dashboard_not_found": "At least one selected dashboard could not be loaded.",
+      "no_dashboard_selected": "Select at least one dashboard."
     }
   },
   "options": {
@@ -24,7 +25,7 @@
         "title": "Dashboard Entity Checker Options",
         "description": "Configure the Dashboard Entity Checker.",
         "data": {
-          "dashboard_url_path": "Dashboard",
+          "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
           "notifications": "Enable notifications"
         }

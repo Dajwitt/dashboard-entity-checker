@@ -101,6 +101,9 @@ def test_failed_scan_has_clear_sensor_diagnostics() -> None:
 
     assert _sensor_attributes(coordinator) == {
         "dashboard": "my-ha-dashboard",
+        "dashboards": ["my-ha-dashboard"],
+        "dashboards_loaded": [],
+        "dashboard_errors": [],
         "scan_interval_minutes": 5,
         "dashboard_loaded": False,
         "status": "Fehler",
@@ -134,6 +137,6 @@ async def test_dashboard_loading_error_is_wrapped_with_clear_context() -> None:
     ):
         with pytest.raises(
             UpdateFailed,
-            match="Dashboard my-ha-dashboard konnte nicht geladen werden",
+            match="Dashboards konnten nicht geladen werden",
         ):
             await coordinator._async_scan_data()

@@ -9,7 +9,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONF_DASHBOARD, CONF_DASHBOARDS, DOMAIN
 from .coordinator import DashboardEntityCheckerCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,9 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle the scan_now service call."""
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
-            raise HomeAssistantError(
-                f"Dashboard {coordinator.dashboard_url} konnte nicht geladen werden."
-            )
+            raise HomeAssistantError(str(coordinator.last_exception))
 
     hass.services.async_register(DOMAIN, "scan_now", handle_scan_now)
 
@@ -78,3 +76,23 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 def _is_home_assistant_fully_started(state: CoreState) -> bool:
     """Return whether the complete Home Assistant startup has finished."""
     return state is CoreState.running
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the legacy single-dashboard setting to a list."""
+    if entry.version >= 2:
+        return True
+
+    data = dict(entry.data)
+    options = dict(entry.options)
+    legacy_data = data.pop(CONF_DASHBOARD, None)
+    legacy_options = options.pop(CONF_DASHBOARD, None)
+    if CONF_DASHBOARDS not in data and legacy_data:
+        data[CONF_DASHBOARDS] = [legacy_data]
+    if CONF_DASHBOARDS not in options and legacy_options:
+        options[CONF_DASHBOARDS] = [legacy_options]
+
+    hass.config_entries.async_update_entry(
+        entry, data=data, options=options, version=2
+    )
+    return True
