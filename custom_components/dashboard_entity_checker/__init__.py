@@ -42,16 +42,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if _is_home_assistant_fully_started(hass.state):
         await coordinator.async_start_scanning()
     else:
+        start_listener_consumed = False
 
         async def _async_start_scanning(_event: Event) -> None:
             """Start the initial and periodic scans after HA startup."""
+            nonlocal start_listener_consumed
+            start_listener_consumed = True
             await coordinator.async_start_scanning()
 
-        entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, _async_start_scanning
-            )
+        remove_start_listener = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _async_start_scanning
         )
+
+        def _remove_pending_start_listener() -> None:
+            """Remove the listener only if its one-time event has not fired."""
+            nonlocal start_listener_consumed
+            if start_listener_consumed:
+                return
+            start_listener_consumed = True
+            remove_start_listener()
+
+        entry.async_on_unload(_remove_pending_start_listener)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True

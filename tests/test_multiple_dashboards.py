@@ -20,7 +20,11 @@ from custom_components.dashboard_entity_checker.coordinator import (
     _notification_message,
 )
 from custom_components.dashboard_entity_checker.dashboard import DashboardNotLoaded
-from custom_components.dashboard_entity_checker.config_flow import _dashboard_schema
+from custom_components.dashboard_entity_checker.config_flow import (
+    DashboardEntityCheckerConfigFlow,
+    DashboardEntityCheckerOptionsFlow,
+    _dashboard_schema,
+)
 
 
 class FakeLookup:
@@ -82,6 +86,14 @@ def test_config_schema_accepts_multiple_selected_dashboards() -> None:
         CONF_SCAN_INTERVAL: 10,
         CONF_NOTIFICATIONS: False,
     }
+
+
+def test_current_home_assistant_options_flow_needs_no_config_entry_argument() -> None:
+    """HA injects config_entry; assigning the read-only property would crash."""
+    flow = DashboardEntityCheckerConfigFlow.async_get_options_flow(
+        SimpleNamespace()
+    )
+    assert isinstance(flow, DashboardEntityCheckerOptionsFlow)
 
 
 def test_same_entity_groups_dashboard_and_view_locations() -> None:

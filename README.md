@@ -64,6 +64,6 @@ Triggers an immediate scan of the configured dashboard.
 
 ## Development Status
 
-- **v0.1.7** (current): Phase 7 — multiple dashboards and aggregated locations
+- **v0.1.8** (current): Phase 7 — HA 2026.7 Options Flow compatibility fix
 - **v0.2.0** (planned): diagnostics and configuration extensions
 - **v0.3.0** (planned): ignore list and result-change events
