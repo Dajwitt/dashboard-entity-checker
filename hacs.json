@@ -4,6 +4,5 @@
   "render_readme": true,
   "homeassistant": "2026.7.0",
   "hacs": "2.0.0",
-  "country": "DE",
-  "iot_class": "local_polling"
+  "country": "DE"
 }
