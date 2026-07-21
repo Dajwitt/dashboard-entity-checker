@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import asdict
 from datetime import timedelta
@@ -45,15 +46,32 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
             CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS
         )
         scan_interval = entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        self.scan_interval_minutes = scan_interval
+        self._configured_update_interval = timedelta(minutes=scan_interval)
+        self._scanning_started = False
+        self._scan_lock = asyncio.Lock()
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=scan_interval),
+            update_interval=None,
         )
 
+    async def async_start_scanning(self) -> None:
+        """Enable periodic polling and perform the first post-start scan."""
+        if self._scanning_started:
+            return
+        self._scanning_started = True
+        self.update_interval = self._configured_update_interval
+        await self.async_refresh()
+
     async def _async_update_data(self) -> dict:
+        """Serialize all scheduled and manual scan requests."""
+        async with self._scan_lock:
+            return await self._async_scan_data()
+
+    async def _async_scan_data(self) -> dict:
         """Load, parse and check the configured dashboard."""
         try:
             config = await load_dashboard(self.hass, self.dashboard_url)
@@ -63,12 +81,13 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
             missing_entities = _find_missing_entities(
                 parsed.entities, self.hass.states, registry
             )
-            _update_notification(
-                self.hass,
-                self.dashboard_url,
-                missing_entities,
-                self.notifications_enabled,
-            )
+            if _notification_needs_update(self.data, missing_entities):
+                _update_notification(
+                    self.hass,
+                    self.dashboard_url,
+                    missing_entities,
+                    self.notifications_enabled,
+                )
 
             return {
                 "dashboard_loaded": True,
@@ -86,7 +105,9 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
                 "last_scan": dt_util.now().isoformat(),
             }
         except DashboardError as exc:
-            raise UpdateFailed(str(exc)) from exc
+            raise UpdateFailed(
+                f"Dashboard {self.dashboard_url} konnte nicht geladen werden: {exc}"
+            ) from exc
 
 
 def _find_missing_entities(
@@ -98,6 +119,17 @@ def _find_missing_entities(
         for entity_id, views in entities.items()
         if states.get(entity_id) is None and registry.async_get(entity_id) is None
     ]
+
+
+def _notification_needs_update(
+    previous_data: dict | None,
+    missing_entities: list[MissingEntity],
+) -> bool:
+    """Return whether the persistent notification content has changed."""
+    return (
+        previous_data is None
+        or previous_data.get("missing_entities") != missing_entities
+    )
 
 
 def _update_notification(

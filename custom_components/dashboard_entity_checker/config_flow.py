@@ -93,24 +93,25 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
             return self.async_create_entry(data=user_input)
 
         dashboards = await _get_dashboards(self.hass)
+        current = {**self.config_entry.data, **self.config_entry.options}
 
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_DASHBOARD,
-                    default=self.config_entry.data.get(
+                    default=current.get(
                         CONF_DASHBOARD, DEFAULT_DASHBOARD
                     ),
                 ): vol.In(dashboards),
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.config_entry.data.get(
+                    default=current.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
                 vol.Required(
                     CONF_NOTIFICATIONS,
-                    default=self.config_entry.data.get(
+                    default=current.get(
                         CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS
                     ),
                 ): bool,

@@ -63,18 +63,24 @@ class DashboardEntityCheckerSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return detailed attributes."""
-        if self.coordinator.data is None:
-            return {}
-        data = self.coordinator.data
-        return {
-            "dashboard": data.get("dashboard_url"),
-            "dashboard_loaded": data.get("dashboard_loaded", False),
-            "status": data.get("status", "unknown"),
-            "missing_entities": data.get("missing_entities", []),
-            "checked_entities": data.get("checked_entities", 0),
-            "templates_resolved": data.get("templates_resolved_count", 0),
-            "template_diagnostics": data.get("template_diagnostics", []),
-            "views": data.get("views", []),
-            "views_scanned": data.get("views_scanned", 0),
-            "last_scan": str(data.get("last_scan", "")),
-        }
+        return _sensor_attributes(self.coordinator)
+
+
+def _sensor_attributes(coordinator) -> dict:
+    """Build state attributes, including a failed latest scan."""
+    data = coordinator.data or {}
+    failed = not coordinator.last_update_success
+    return {
+        "dashboard": data.get("dashboard_url", coordinator.dashboard_url),
+        "scan_interval_minutes": coordinator.scan_interval_minutes,
+        "dashboard_loaded": False if failed else data.get("dashboard_loaded", False),
+        "status": "Fehler" if failed else data.get("status", "Warte auf ersten Scan"),
+        "missing_entities": data.get("missing_entities", []),
+        "checked_entities": data.get("checked_entities", 0),
+        "templates_resolved": data.get("templates_resolved_count", 0),
+        "template_diagnostics": data.get("template_diagnostics", []),
+        "views": data.get("views", []),
+        "views_scanned": data.get("views_scanned", 0),
+        "last_scan": str(data.get("last_scan", "")),
+        "last_error": str(coordinator.last_exception) if failed else None,
+    }
