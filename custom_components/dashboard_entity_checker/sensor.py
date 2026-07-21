@@ -16,7 +16,7 @@ from .coordinator import DashboardEntityCheckerCoordinator
 
 SENSOR_DESCRIPTION = SensorEntityDescription(
     key="dashboard_entity_checker",
-    name=NAME,
+    name=None,
     icon="mdi:monitor-dashboard",
     has_entity_name=True,
 )
@@ -68,9 +68,11 @@ class DashboardEntityCheckerSensor(CoordinatorEntity, SensorEntity):
         data = self.coordinator.data
         return {
             "dashboard": data.get("dashboard_url"),
+            "dashboard_loaded": data.get("dashboard_loaded", False),
             "status": data.get("status", "unknown"),
             "missing_entities": data.get("missing_entities", []),
             "checked_entities": data.get("checked_entities", 0),
+            "views": data.get("views", []),
             "views_scanned": data.get("views_scanned", 0),
             "last_scan": str(data.get("last_scan", "")),
         }

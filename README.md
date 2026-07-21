@@ -2,6 +2,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![Validate](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml/badge.svg)](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml)
+[![Tests](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/tests.yml/badge.svg)](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/tests.yml)
 
 Home Assistant integration that scans your Lovelace dashboards for **ghost entities** — entity IDs referenced in dashboard YAML that no longer exist in Home Assistant.
 
@@ -11,7 +12,6 @@ Home Assistant integration that scans your Lovelace dashboards for **ghost entit
 - Detects missing/deleted entities (ghosts)
 - Filters out service calls that look like entity IDs
 - Reports results via a sensor entity
-- Persistent notification when ghosts are found
 - Config Flow — no YAML configuration needed
 
 ## Installation
@@ -32,7 +32,7 @@ Copy the `custom_components/dashboard_entity_checker` folder to your Home Assist
 2. Search for "Dashboard Entity Checker"
 3. Select the dashboard to check (default: `my-ha-dashboard`)
 4. Set the scan interval (default: 5 minutes)
-5. Enable or disable notifications
+5. The notification setting is reserved and has no effect until Phase 3
 
 ## Usage
 
@@ -46,18 +46,18 @@ The integration creates a sensor `sensor.dashboard_entity_checker`:
 ### Service
 
 ```yaml
-service: dashboard_entity_checker.scan_now
+action: dashboard_entity_checker.scan_now
 ```
 
 Triggers an immediate scan of the configured dashboard.
 
 ## Requirements
 
-- Home Assistant 2024.1.0 or newer
-- HACS 1.34.0 or newer (for HACS installation)
+- Home Assistant 2026.7.0 or newer
+- HACS 2.0.0 or newer (for HACS installation)
 
 ## Development Status
 
-- **v0.1.1** (current): Phase 0+1 — Config Flow, dashboard loading via Lovelace API, sensor, diagnostics
-- **v0.2.0** (planned): Entity ID extraction, ghost detection, notifications
+- **v0.1.2** (current): Phase 2 — direct entity IDs, view assignment and state/registry existence checks
+- **v0.2.0** (planned): Button-Card JavaScript, decluttering templates and diagnostics extensions
 - **v0.3.0** (planned): Decluttering template support, multiple dashboards
