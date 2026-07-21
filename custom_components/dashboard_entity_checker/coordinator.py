@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict
 from datetime import timedelta
 from typing import TypedDict
 
@@ -76,6 +77,11 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
                 "views_scanned": len(parsed.views),
                 "checked_entities": parsed.checked_entities,
                 "missing_entities": missing_entities,
+                "templates_resolved": parsed.templates,
+                "templates_resolved_count": len(parsed.templates),
+                "template_diagnostics": [
+                    asdict(diagnostic) for diagnostic in parsed.diagnostics
+                ],
                 "status": "Fehler gefunden" if missing_entities else "OK",
                 "last_scan": dt_util.now().isoformat(),
             }

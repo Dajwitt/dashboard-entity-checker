@@ -72,6 +72,8 @@ class DashboardEntityCheckerSensor(CoordinatorEntity, SensorEntity):
             "status": data.get("status", "unknown"),
             "missing_entities": data.get("missing_entities", []),
             "checked_entities": data.get("checked_entities", 0),
+            "templates_resolved": data.get("templates_resolved_count", 0),
+            "template_diagnostics": data.get("template_diagnostics", []),
             "views": data.get("views", []),
             "views_scanned": data.get("views_scanned", 0),
             "last_scan": str(data.get("last_scan", "")),

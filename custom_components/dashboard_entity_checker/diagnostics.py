@@ -25,6 +25,8 @@ async def async_get_config_entry_diagnostics(
             "views_scanned": 0,
             "entities_checked": 0,
             "missing_entities": [],
+            "templates_resolved": {},
+            "template_diagnostics": [],
             "last_error": None,
         }
 
@@ -37,5 +39,7 @@ async def async_get_config_entry_diagnostics(
         "views_scanned": data.get("views_scanned", 0),
         "entities_checked": data.get("checked_entities", 0),
         "missing_entities": data.get("missing_entities", []),
+        "templates_resolved": data.get("templates_resolved", {}),
+        "template_diagnostics": data.get("template_diagnostics", []),
         "last_error": data.get("last_error"),
     }
