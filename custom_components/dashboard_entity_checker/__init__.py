@@ -22,7 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = DashboardEntityCheckerCoordinator(
-        hass, {**entry.data, **entry.options}
+        hass,
+        {**entry.data, **entry.options},
+        config_entry=entry,
     )
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

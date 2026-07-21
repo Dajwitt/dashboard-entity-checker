@@ -9,6 +9,7 @@ from datetime import timedelta
 from typing import TypedDict
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -39,7 +40,13 @@ class MissingEntity(TypedDict):
 class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
     """Load a dashboard and check its direct entity references."""
 
-    def __init__(self, hass: HomeAssistant, entry_data: dict) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_data: dict,
+        *,
+        config_entry: ConfigEntry | None = None,
+    ) -> None:
         """Initialize the coordinator."""
         self.dashboard_url = entry_data[CONF_DASHBOARD]
         self.notifications_enabled = entry_data.get(
@@ -54,6 +61,7 @@ class DashboardEntityCheckerCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=None,
         )
