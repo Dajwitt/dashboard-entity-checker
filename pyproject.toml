@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dashboard-entity-checker"
-version = "0.3.2"
+version = "0.3.3"
 description = "Find missing entity references in nested custom Lovelace dashboards, templates, and supported JavaScript"
 readme = "README.md"
 license = {text = "MIT"}

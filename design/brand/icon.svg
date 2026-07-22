@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="background" x1="34" y1="24" x2="222" y2="234" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1769C2"/>
+      <stop offset="0.58" stop-color="#0D4E9D"/>
+      <stop offset="1" stop-color="#082F6D"/>
+    </linearGradient>
+    <linearGradient id="front" x1="70" y1="86" x2="190" y2="205" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF5FC"/>
+    </linearGradient>
+    <filter id="cardShadow" x="25" y="55" width="210" height="190" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#06234F" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect x="16" y="16" width="224" height="224" rx="52" fill="url(#background)"/>
+  <rect x="18.5" y="18.5" width="219" height="219" rx="49.5" fill="none" stroke="#4EA5E3" stroke-width="3" opacity="0.34"/>
+
+  <rect x="61" y="41" width="142" height="121" rx="20" fill="#156DBE" stroke="#4DBDEA" stroke-width="9" opacity="0.72"/>
+  <rect x="42" y="60" width="149" height="127" rx="21" fill="#1B82CC" stroke="#7BD7F4" stroke-width="10"/>
+  <rect x="54" y="79" width="151" height="130" rx="21" fill="url(#front)" filter="url(#cardShadow)"/>
+
+  <rect x="75" y="103" width="69" height="9" rx="4.5" fill="#8BC8EB" opacity="0.72"/>
+  <path d="M80 150H108M130 150H151" fill="none" stroke="#2979BE" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="79" cy="150" r="12" fill="#2979BE"/>
+  <circle cx="119" cy="150" r="12" fill="#3DB8D7"/>
+
+  <circle cx="172" cy="150" r="18" fill="#FFF4E4" opacity="0.88"/>
+  <circle cx="172" cy="150" r="17" fill="none" stroke="#FF9F1C" stroke-width="10" stroke-dasharray="30 15" stroke-linecap="round" transform="rotate(-38 172 150)"/>
+  <path d="M165 143l14 14" stroke="#FF9F1C" stroke-width="6.5" stroke-linecap="round"/>
+</svg>
