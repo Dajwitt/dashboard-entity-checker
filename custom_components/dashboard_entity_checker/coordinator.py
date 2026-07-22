@@ -326,7 +326,7 @@ def _notification_needs_update(
 
 def _update_notification(
     hass: HomeAssistant,
-    dashboards: str | list[str],
+    _dashboards: list[str] | str,
     missing_entities: list[MissingEntity],
     enabled: bool,
 ) -> None:
@@ -335,28 +335,74 @@ def _update_notification(
         persistent_notification.async_dismiss(hass, NOTIFICATION_ID)
         return
 
-    dashboard_urls = [dashboards] if isinstance(dashboards, str) else dashboards
-    title = (
-        f"Dashboard-Fehler: {dashboard_urls[0]}"
-        if len(dashboard_urls) == 1
-        else "Dashboard-Fehler"
-    )
+    language = getattr(getattr(hass, "config", None), "language", "en")
     persistent_notification.async_create(
         hass,
-        _notification_message(missing_entities),
-        title=title,
+        _notification_message(missing_entities, language),
+        title=_notification_title(len(missing_entities), language),
         notification_id=NOTIFICATION_ID,
     )
 
 
-def _notification_message(missing_entities: list[MissingEntity]) -> str:
-    """Build a readable body with dashboard-to-view locations."""
-    blocks: list[str] = []
+NOTIFICATION_MAX_ENTITIES_PER_VIEW = 8
+
+
+def _notification_title(count: int, language: str) -> str:
+    """Build a localized title with the unique missing-entity count."""
+    if language.lower().startswith("de"):
+        label = "fehlende Entity" if count == 1 else "fehlende Entities"
+    else:
+        label = "missing entity" if count == 1 else "missing entities"
+    return f"Dashboard Entity Checker: {count} {label}"
+
+
+def _notification_message(
+    missing_entities: list[MissingEntity], language: str = "en"
+) -> str:
+    """Build compact Markdown grouped by dashboard and view."""
+    grouped: dict[str, dict[str, list[str]]] = {}
     for item in missing_entities:
-        location_lines = [
-            f"- {location['dashboard']} → {view}"
-            for location in item["locations"]
-            for view in location["views"]
-        ]
-        blocks.append("\n".join([item["entity"], *location_lines]))
+        entity_id = item["entity"]
+        for location in item["locations"]:
+            dashboard = location["dashboard"]
+            for view in location["views"]:
+                entities = grouped.setdefault(dashboard, {}).setdefault(view, [])
+                if entity_id not in entities:
+                    entities.append(entity_id)
+
+    view_count = sum(len(views) for views in grouped.values())
+    german = language.lower().startswith("de")
+    if german:
+        entity_label = (
+            "fehlende Entity" if len(missing_entities) == 1 else "fehlende Entities"
+        )
+        view_label = "Ansicht" if view_count == 1 else "Ansichten"
+        footer = "_Vollständige Liste: Sensorattribut `missing_entities`._"
+        more_label = "weitere"
+    else:
+        entity_label = (
+            "missing entity" if len(missing_entities) == 1 else "missing entities"
+        )
+        view_label = "view" if view_count == 1 else "views"
+        footer = "_Complete list: sensor attribute `missing_entities`._"
+        more_label = "more"
+
+    blocks = [
+        f"**{len(missing_entities)} {entity_label} in {view_count} {view_label}**"
+    ]
+    for dashboard in sorted(grouped):
+        blocks.append(f"### `{dashboard}`")
+        for view in sorted(grouped[dashboard]):
+            entities = sorted(grouped[dashboard][view])
+            lines = [f"**{view}** · {len(entities)}"]
+            lines.extend(
+                f"- `{entity_id}`"
+                for entity_id in entities[:NOTIFICATION_MAX_ENTITIES_PER_VIEW]
+            )
+            hidden_count = len(entities) - NOTIFICATION_MAX_ENTITIES_PER_VIEW
+            if hidden_count > 0:
+                lines.append(f"- _+{hidden_count} {more_label}_")
+            blocks.append("\n".join(lines))
+
+    blocks.append(footer)
     return "\n\n".join(blocks)

@@ -164,8 +164,8 @@ def test_same_entity_groups_dashboard_and_view_locations() -> None:
     ]
 
 
-def test_notification_lists_dashboard_to_view_paths() -> None:
-    """The notification matches the project plan's dashboard → view format."""
+def test_notification_groups_dashboard_to_view_paths() -> None:
+    """The notification groups every dashboard and view location."""
     missing = [
         {
             "entity": "sensor.shared_missing",
@@ -177,10 +177,16 @@ def test_notification_lists_dashboard_to_view_paths() -> None:
     ]
 
     assert _notification_message(missing) == (
-        "sensor.shared_missing\n"
-        "- my-ha-dashboard → Wetter\n"
-        "- dashboard-test → Home\n"
-        "- dashboard-test → Bad"
+        "**1 missing entity in 3 views**\n\n"
+        "### `dashboard-test`\n\n"
+        "**Bad** · 1\n"
+        "- `sensor.shared_missing`\n\n"
+        "**Home** · 1\n"
+        "- `sensor.shared_missing`\n\n"
+        "### `my-ha-dashboard`\n\n"
+        "**Wetter** · 1\n"
+        "- `sensor.shared_missing`\n\n"
+        "_Complete list: sensor attribute `missing_entities`._"
     )
 
 

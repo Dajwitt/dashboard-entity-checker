@@ -155,6 +155,10 @@ When notifications are enabled:
 - one fixed persistent notification is used;
 - repeated identical results do not create duplicates;
 - changed locations update the existing notification;
+- results are grouped by dashboard and view instead of repeating every location;
+- long view lists show the first eight entity IDs and a remaining-count summary;
+- the full unabridged result remains available in `missing_entities`;
+- title, summary and truncation text follow Home Assistant's German or English language;
 - a complete clean scan removes the notification;
 - disabling notifications also removes it.
 
@@ -190,6 +194,7 @@ Do not post access tokens, passwords or private Home Assistant URLs.
 
 ## Release status
 
+- **v0.3.2:** compact grouped German/English notifications
 - **v0.3.1:** ignore list can be cleared completely
 - **v0.3.0:** multiple dashboards, nested Decluttering resolution, ignore list and result-change events
 - **Next milestone:** v1.0 release hardening, documented limits and default HACS catalog submission readiness
