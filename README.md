@@ -78,4 +78,5 @@ the complete missing-entity result, selected dashboards and scan time.
 
 ## Development Status
 
-- **v0.3.0** (current): ignore list and result-change events
+- **v0.3.1** (current): ignore list can be cleared completely
+- **v0.3.0**: ignore list and result-change events

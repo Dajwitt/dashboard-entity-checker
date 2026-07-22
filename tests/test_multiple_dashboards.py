@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import voluptuous as vol
 
 from custom_components.dashboard_entity_checker import async_migrate_entry
 from custom_components.dashboard_entity_checker.const import (
@@ -98,6 +99,29 @@ def test_current_home_assistant_options_flow_needs_no_config_entry_argument() ->
         SimpleNamespace()
     )
     assert isinstance(flow, DashboardEntityCheckerOptionsFlow)
+
+
+def test_ignore_list_can_be_cleared_completely() -> None:
+    """The multiline field must not be required after an ID was configured."""
+    schema = _dashboard_schema(
+        {"my-ha-dashboard": "MY HA DASHBOARD"},
+        ["my-ha-dashboard"],
+        5,
+        True,
+        "sensor.previously_ignored",
+    )
+    marker = next(
+        key for key in schema.schema if key.schema == CONF_IGNORED_ENTITIES
+    )
+    assert isinstance(marker, vol.Optional)
+    assert marker.description == {"suggested_value": "sensor.previously_ignored"}
+    assert schema(
+        {
+            CONF_DASHBOARDS: ["my-ha-dashboard"],
+            CONF_SCAN_INTERVAL: 5,
+            CONF_NOTIFICATIONS: True,
+        }
+    )[CONF_IGNORED_ENTITIES] == ""
 
 
 def test_same_entity_groups_dashboard_and_view_locations() -> None:

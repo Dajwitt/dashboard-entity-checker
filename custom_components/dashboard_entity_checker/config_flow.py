@@ -138,8 +138,10 @@ def _dashboard_schema(
                 CONF_SCAN_INTERVAL, default=scan_interval
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
             vol.Required(CONF_NOTIFICATIONS, default=notifications): bool,
-            vol.Required(
-                CONF_IGNORED_ENTITIES, default=ignored_entities
+            vol.Optional(
+                CONF_IGNORED_ENTITIES,
+                default=DEFAULT_IGNORED_ENTITIES,
+                description={"suggested_value": ignored_entities},
             ): TextSelector(TextSelectorConfig(multiline=True)),
         }
     )
