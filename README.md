@@ -8,6 +8,20 @@ Dashboard Entity Checker is a local Home Assistant custom integration that check
 
 It loads dashboard configuration through Home Assistant's Python interfaces. It does **not** read or modify `.storage` files and it never changes dashboard cards or entity IDs.
 
+## Why this integration exists
+
+This project started with heavily customized Lovelace dashboards built from deeply nested cards, Decluttering Card templates and Button-Card JavaScript. Missing entity references can be hidden several template levels away from the visible card.
+
+General-purpose Home Assistant maintenance tools such as [Spook](https://spook.boo/) can already detect many problems in conventional dashboards. In deeply nested custom dashboards, however, template indirection and JavaScript references may prevent those tools from seeing the original entity reference. Dashboard Entity Checker complements them by resolving the dashboard structures it supports before checking each resulting entity ID.
+
+It is therefore primarily useful for:
+
+- complex custom dashboards where missing references are hidden inside nested templates or supported JavaScript;
+- users who already use Spook but need an additional dashboard-specific check for structures Spook does not resolve;
+- users who do not have Spook installed and want a focused dashboard reference checker.
+
+The dashboard selector is intentional: you can scan only the custom or problem-prone dashboards that need this deeper analysis, or select several dashboards when you want broader coverage. This integration is not affiliated with Spook and does not replace Spook's wider Home Assistant repair and maintenance checks.
+
 > [!IMPORTANT]
 > This project is currently a pre-1.0 public release and is not yet included in the default HACS catalog. Install it as a **custom HACS repository** using the instructions below.
 
