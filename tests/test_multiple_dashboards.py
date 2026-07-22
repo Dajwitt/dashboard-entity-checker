@@ -9,6 +9,7 @@ from custom_components.dashboard_entity_checker import async_migrate_entry
 from custom_components.dashboard_entity_checker.const import (
     CONF_DASHBOARD,
     CONF_DASHBOARDS,
+    CONF_IGNORED_ENTITIES,
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
 )
@@ -73,6 +74,7 @@ def test_config_schema_accepts_multiple_selected_dashboards() -> None:
         ["my-ha-dashboard"],
         5,
         True,
+        "sensor.ignored",
     )
 
     assert schema(
@@ -80,11 +82,13 @@ def test_config_schema_accepts_multiple_selected_dashboards() -> None:
             CONF_DASHBOARDS: ["my-ha-dashboard", "dashboard-test"],
             CONF_SCAN_INTERVAL: 10,
             CONF_NOTIFICATIONS: False,
+            CONF_IGNORED_ENTITIES: "sensor.ignored",
         }
     ) == {
         CONF_DASHBOARDS: ["my-ha-dashboard", "dashboard-test"],
         CONF_SCAN_INTERVAL: 10,
         CONF_NOTIFICATIONS: False,
+        CONF_IGNORED_ENTITIES: "sensor.ignored",
     }
 
 

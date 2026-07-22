@@ -7,7 +7,8 @@
         "data": {
           "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
-          "notifications": "Enable notifications"
+          "notifications": "Enable notifications",
+          "ignored_entities": "Ignored entity IDs (one per line)"
         }
       }
     },
@@ -16,7 +17,8 @@
     },
     "error": {
       "dashboard_not_found": "At least one selected dashboard could not be loaded.",
-      "no_dashboard_selected": "Select at least one dashboard."
+      "no_dashboard_selected": "Select at least one dashboard.",
+      "invalid_entity_id": "Enter valid entity IDs only, one per line."
     }
   },
   "options": {
@@ -27,7 +29,8 @@
         "data": {
           "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
-          "notifications": "Enable notifications"
+          "notifications": "Enable notifications",
+          "ignored_entities": "Ignored entity IDs (one per line)"
         }
       }
     }

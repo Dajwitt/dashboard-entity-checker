@@ -108,6 +108,8 @@ def test_failed_scan_has_clear_sensor_diagnostics() -> None:
         "dashboard_loaded": False,
         "status": "Fehler",
         "missing_entities": [],
+        "ignored_entities": [],
+        "ignored_matches": [],
         "checked_entities": 0,
         "templates_resolved": 0,
         "template_diagnostics": [],

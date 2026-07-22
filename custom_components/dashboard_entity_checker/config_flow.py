@@ -7,25 +7,30 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.core import callback
+from homeassistant.core import callback, valid_entity_id
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
 )
 
 from .const import (
     CONF_DASHBOARD,
     CONF_DASHBOARDS,
+    CONF_IGNORED_ENTITIES,
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
     DEFAULT_DASHBOARD,
+    DEFAULT_IGNORED_ENTITIES,
     DEFAULT_NOTIFICATIONS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     NAME,
 )
 from .dashboard import DashboardError, load_dashboard
+from .coordinator import _configured_ignored_entities
 
 
 class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,6 +48,7 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = await _validate_dashboard_selection(self.hass, user_input)
+            errors.update(_validate_ignored_entities(user_input))
             if not errors:
                 return self.async_create_entry(title=NAME, data=user_input)
 
@@ -61,6 +67,7 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
                 selected,
                 DEFAULT_SCAN_INTERVAL,
                 DEFAULT_NOTIFICATIONS,
+                DEFAULT_IGNORED_ENTITIES,
             ),
             errors=errors,
         )
@@ -84,6 +91,7 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             errors = await _validate_dashboard_selection(self.hass, user_input)
+            errors.update(_validate_ignored_entities(user_input))
             if not errors:
                 return self.async_create_entry(data=user_input)
             current = user_input
@@ -99,6 +107,7 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
                 selected,
                 current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 current.get(CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS),
+                _ignored_entities_text(current),
             ),
             errors=errors,
         )
@@ -109,6 +118,7 @@ def _dashboard_schema(
     selected: list[str],
     scan_interval: int,
     notifications: bool,
+    ignored_entities: str,
 ) -> vol.Schema:
     """Build the shared config/options schema."""
     options = [
@@ -128,6 +138,9 @@ def _dashboard_schema(
                 CONF_SCAN_INTERVAL, default=scan_interval
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
             vol.Required(CONF_NOTIFICATIONS, default=notifications): bool,
+            vol.Required(
+                CONF_IGNORED_ENTITIES, default=ignored_entities
+            ): TextSelector(TextSelectorConfig(multiline=True)),
         }
     )
 
@@ -146,6 +159,21 @@ async def _validate_dashboard_selection(
         except DashboardError:
             return {CONF_DASHBOARDS: "dashboard_not_found"}
     return {}
+
+
+def _validate_ignored_entities(user_input: dict[str, Any]) -> dict[str, str]:
+    """Reject malformed exact entity IDs before saving options."""
+    if any(
+        not valid_entity_id(entity_id)
+        for entity_id in _configured_ignored_entities(user_input)
+    ):
+        return {CONF_IGNORED_ENTITIES: "invalid_entity_id"}
+    return {}
+
+
+def _ignored_entities_text(data: dict[str, Any] | None) -> str:
+    """Return configured ignored IDs as one line per ID for the form."""
+    return "\n".join(_configured_ignored_entities(data or {}))
 
 
 def _selected_dashboard_urls(data: dict[str, Any] | None) -> list[str]:

@@ -82,6 +82,10 @@ def _sensor_attributes(coordinator) -> dict:
         "dashboard_loaded": False if failed else data.get("dashboard_loaded", False),
         "status": "Fehler" if failed else data.get("status", "Warte auf ersten Scan"),
         "missing_entities": data.get("missing_entities", []),
+        "ignored_entities": data.get(
+            "ignored_entities", getattr(coordinator, "ignored_entities", [])
+        ),
+        "ignored_matches": data.get("ignored_matches", []),
         "checked_entities": data.get("checked_entities", 0),
         "templates_resolved": data.get("templates_resolved_count", 0),
         "template_diagnostics": data.get("template_diagnostics", []),
