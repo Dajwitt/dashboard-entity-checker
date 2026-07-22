@@ -1,5 +1,7 @@
 __pycache__/
 .venv/
+.coverage
+htmlcov/
 *.py[cod]
 *.egg-info/
 .DS_Store

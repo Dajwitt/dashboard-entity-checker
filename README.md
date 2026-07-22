@@ -194,6 +194,7 @@ Do not post access tokens, passwords or private Home Assistant URLs.
 
 ## Release status
 
+- **v0.3.4:** v1.0 quality gate with expanded HA integration tests, enforced coverage and Ruff CI
 - **v0.3.3:** new Nested Scan brand icon
 - **v0.3.2:** compact grouped German/English notifications
 - **v0.3.1:** ignore list can be cleared completely
