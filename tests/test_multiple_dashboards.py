@@ -75,7 +75,7 @@ def test_config_schema_accepts_multiple_selected_dashboards() -> None:
         ["my-ha-dashboard"],
         5,
         True,
-        "sensor.ignored",
+        ["sensor.ignored"],
     )
 
     assert schema(
@@ -83,13 +83,13 @@ def test_config_schema_accepts_multiple_selected_dashboards() -> None:
             CONF_DASHBOARDS: ["my-ha-dashboard", "dashboard-test"],
             CONF_SCAN_INTERVAL: 10,
             CONF_NOTIFICATIONS: False,
-            CONF_IGNORED_ENTITIES: "sensor.ignored",
+            CONF_IGNORED_ENTITIES: ["sensor.ignored"],
         }
     ) == {
         CONF_DASHBOARDS: ["my-ha-dashboard", "dashboard-test"],
         CONF_SCAN_INTERVAL: 10,
         CONF_NOTIFICATIONS: False,
-        CONF_IGNORED_ENTITIES: "sensor.ignored",
+        CONF_IGNORED_ENTITIES: ["sensor.ignored"],
     }
 
 
@@ -102,26 +102,29 @@ def test_current_home_assistant_options_flow_needs_no_config_entry_argument() ->
 
 
 def test_ignore_list_can_be_cleared_completely() -> None:
-    """The multiline field must not be required after an ID was configured."""
+    """The multi-select stays optional after an ID was configured."""
     schema = _dashboard_schema(
         {"my-ha-dashboard": "MY HA DASHBOARD"},
         ["my-ha-dashboard"],
         5,
         True,
-        "sensor.previously_ignored",
+        ["sensor.previously_ignored"],
     )
     marker = next(
         key for key in schema.schema if key.schema == CONF_IGNORED_ENTITIES
     )
     assert isinstance(marker, vol.Optional)
-    assert marker.description == {"suggested_value": "sensor.previously_ignored"}
-    assert schema(
+    assert marker.description == {
+        "suggested_value": ["sensor.previously_ignored"]
+    }
+    validated = schema(
         {
             CONF_DASHBOARDS: ["my-ha-dashboard"],
             CONF_SCAN_INTERVAL: 5,
             CONF_NOTIFICATIONS: True,
         }
-    )[CONF_IGNORED_ENTITIES] == ""
+    )
+    assert CONF_IGNORED_ENTITIES not in validated
 
 
 def test_same_entity_groups_dashboard_and_view_locations() -> None:

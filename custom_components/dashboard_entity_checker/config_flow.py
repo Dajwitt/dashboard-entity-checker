@@ -8,11 +8,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
 )
 
 from .const import (
@@ -22,7 +22,6 @@ from .const import (
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
     DEFAULT_DASHBOARD,
-    DEFAULT_IGNORED_ENTITIES,
     DEFAULT_NOTIFICATIONS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -66,7 +65,7 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
                 selected,
                 DEFAULT_SCAN_INTERVAL,
                 DEFAULT_NOTIFICATIONS,
-                DEFAULT_IGNORED_ENTITIES,
+                _configured_ignored_entities(user_input or {}),
             ),
             errors=errors,
         )
@@ -92,7 +91,9 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
             errors = await _validate_dashboard_selection(self.hass, user_input)
             errors.update(_validate_ignored_entities(user_input))
             if not errors:
-                return self.async_create_entry(data=user_input)
+                saved = dict(user_input)
+                saved.setdefault(CONF_IGNORED_ENTITIES, [])
+                return self.async_create_entry(data=saved)
             current = user_input
 
         dashboards = await _get_dashboards(self.hass)
@@ -106,7 +107,12 @@ class DashboardEntityCheckerOptionsFlow(OptionsFlow):
                 selected,
                 current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 current.get(CONF_NOTIFICATIONS, DEFAULT_NOTIFICATIONS),
-                _ignored_entities_text(current),
+                _configured_ignored_entities(current),
+                ignored_options=_ignored_entity_options(
+                    self.hass,
+                    self.config_entry.entry_id,
+                    current,
+                ),
             ),
             errors=errors,
         )
@@ -117,13 +123,16 @@ def _dashboard_schema(
     selected: list[str],
     scan_interval: int,
     notifications: bool,
-    ignored_entities: str,
+    ignored_entities: list[str],
+    *,
+    ignored_options: list[str] | None = None,
 ) -> vol.Schema:
     """Build the shared config/options schema."""
     options = [
         {"value": url_path, "label": title}
         for url_path, title in dashboards.items()
     ]
+    entity_options = sorted(set(ignored_options or ()) | set(ignored_entities))
     return vol.Schema(
         {
             vol.Required(CONF_DASHBOARDS, default=selected): SelectSelector(
@@ -136,12 +145,20 @@ def _dashboard_schema(
             vol.Required(
                 CONF_SCAN_INTERVAL, default=scan_interval
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
-            vol.Required(CONF_NOTIFICATIONS, default=notifications): bool,
+            vol.Required(
+                CONF_NOTIFICATIONS, default=notifications
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Optional(
                 CONF_IGNORED_ENTITIES,
-                default=DEFAULT_IGNORED_ENTITIES,
                 description={"suggested_value": ignored_entities},
-            ): TextSelector(TextSelectorConfig(multiline=True)),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=entity_options,
+                    multiple=True,
+                    custom_value=True,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
     )
 
@@ -172,9 +189,27 @@ def _validate_ignored_entities(user_input: dict[str, Any]) -> dict[str, str]:
     return {}
 
 
-def _ignored_entities_text(data: dict[str, Any] | None) -> str:
-    """Return configured ignored IDs as one line per ID for the form."""
-    return "\n".join(_configured_ignored_entities(data or {}))
+def _ignored_entity_options(
+    hass: Any, entry_id: str, values: dict[str, Any]
+) -> list[str]:
+    """Return current findings and configured IDs for the searchable selector."""
+    options = set(_configured_ignored_entities(values))
+    coordinator = hass.data.get(DOMAIN, {}).get(entry_id)
+    scan = getattr(coordinator, "data", None) or {}
+    if not isinstance(scan, dict):
+        return sorted(options)
+    for key in ("missing_entities", "ignored_matches"):
+        findings = scan.get(key, [])
+        if not isinstance(findings, list):
+            continue
+        options.update(
+            item["entity"]
+            for item in findings
+            if isinstance(item, dict)
+            and isinstance(item.get("entity"), str)
+            and item["entity"]
+        )
+    return sorted(options)
 
 
 def _selected_dashboard_urls(data: dict[str, Any] | None) -> list[str]:
