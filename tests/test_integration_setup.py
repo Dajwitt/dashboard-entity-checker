@@ -16,6 +16,8 @@ from custom_components.dashboard_entity_checker import (
 from custom_components.dashboard_entity_checker.const import DOMAIN, VERSION
 from custom_components.dashboard_entity_checker.sensor import (
     DashboardEntityCheckerSensor,
+)
+from custom_components.dashboard_entity_checker.sensor import (
     async_setup_entry as async_setup_sensor_entry,
 )
 

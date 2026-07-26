@@ -7,6 +7,11 @@ import pytest
 import voluptuous as vol
 
 from custom_components.dashboard_entity_checker import async_migrate_entry
+from custom_components.dashboard_entity_checker.config_flow import (
+    DashboardEntityCheckerConfigFlow,
+    DashboardEntityCheckerOptionsFlow,
+    _dashboard_schema,
+)
 from custom_components.dashboard_entity_checker.const import (
     CONF_DASHBOARD,
     CONF_DASHBOARDS,
@@ -22,11 +27,6 @@ from custom_components.dashboard_entity_checker.coordinator import (
     _notification_message,
 )
 from custom_components.dashboard_entity_checker.dashboard import DashboardNotLoaded
-from custom_components.dashboard_entity_checker.config_flow import (
-    DashboardEntityCheckerConfigFlow,
-    DashboardEntityCheckerOptionsFlow,
-    _dashboard_schema,
-)
 
 
 class FakeLookup:

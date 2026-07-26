@@ -16,6 +16,12 @@ _DOMAIN_PATTERN = "|".join(re.escape(domain) for domain in ENTITY_DOMAINS)
 _ENTITY_PATTERN = rf"(?:{_DOMAIN_PATTERN})\.[a-z0-9_]+"
 
 _ENTITY_ID_RE = re.compile(rf"^{_ENTITY_PATTERN}$")
+# A scalar with another dot-separated object-id suffix is not a valid HA entity
+# ID. Keep the complete value so autocomplete mistakes cannot hide behind a
+# valid existing prefix (for example ``binary_sensor.window.door``).
+_MALFORMED_ENTITY_ID_RE = re.compile(
+    rf"^(?:{_DOMAIN_PATTERN})\.[a-z0-9_]+(?:\.[a-z0-9_]+)+$"
+)
 _ENTITY_ID_IN_TEXT_RE = re.compile(
     rf"(?<![a-z0-9_])(?P<entity>{_ENTITY_PATTERN})(?![a-z0-9_.])"
 )
@@ -171,7 +177,7 @@ def _collect_entities(
     if not isinstance(value, str) or key in _SERVICE_KEYS:
         return
 
-    if _ENTITY_ID_RE.fullmatch(value):
+    if _ENTITY_ID_RE.fullmatch(value) or _MALFORMED_ENTITY_ID_RE.fullmatch(value):
         found.add(value)
         return
 

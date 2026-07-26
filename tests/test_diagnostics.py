@@ -1,6 +1,6 @@
 """Tests for config-entry diagnostics."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -46,7 +46,7 @@ async def test_diagnostics_without_coordinator_uses_saved_config() -> None:
 @pytest.mark.asyncio
 async def test_successful_diagnostics_exposes_structured_scan_data() -> None:
     """A successful scan is represented without dropping structured details."""
-    scan_time = datetime(2026, 7, 22, 10, 30, tzinfo=timezone.utc)
+    scan_time = datetime(2026, 7, 22, 10, 30, tzinfo=UTC)
     coordinator = SimpleNamespace(
         data={
             "dashboard_url": "one",

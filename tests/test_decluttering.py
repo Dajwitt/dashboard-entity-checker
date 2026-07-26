@@ -36,6 +36,31 @@ def test_simple_template_reports_entity_under_original_view() -> None:
     assert result.diagnostics == ()
 
 
+def test_malformed_autocomplete_entity_is_reported_as_complete_reference() -> None:
+    """An extra autocomplete suffix must not hide a malformed entity value."""
+    malformed = "binary_sensor.fenster_wohnzimmer_contact.haustur_contact"
+    config = {
+        "decluttering_templates": {
+            "homi_group_kueche_security": {
+                "card": {"entity": "[[binary_sensor_fenster]]"}
+            }
+        },
+        "views": [
+            {
+                "title": "Kueche",
+                "cards": [
+                    _decluttering_card(
+                        "homi_group_kueche_security",
+                        [{"binary_sensor_fenster": malformed}],
+                    )
+                ],
+            }
+        ],
+    }
+
+    assert parse_dashboard(config).entities == {malformed: ["Kueche"]}
+
+
 def test_defaults_are_applied_and_explicit_variables_override_them() -> None:
     """Defaults fill missing values while card variables take precedence."""
     config = {

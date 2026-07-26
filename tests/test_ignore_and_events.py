@@ -3,14 +3,14 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from custom_components.dashboard_entity_checker.config_flow import (
+    _validate_ignored_entities,
+)
 from custom_components.dashboard_entity_checker.const import EVENT_RESULT_CHANGED
 from custom_components.dashboard_entity_checker.coordinator import (
     _configured_ignored_entities,
     _fire_result_changed_event,
     _partition_ignored_entities,
-)
-from custom_components.dashboard_entity_checker.config_flow import (
-    _validate_ignored_entities,
 )
 
 MISSING = [

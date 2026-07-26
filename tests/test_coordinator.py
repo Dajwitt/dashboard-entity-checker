@@ -1,6 +1,8 @@
 """Tests for entity existence rules across dashboards."""
 
-from custom_components.dashboard_entity_checker.coordinator import _find_missing_entities
+from custom_components.dashboard_entity_checker.coordinator import (
+    _find_missing_entities,
+)
 
 
 class FakeLookup:

@@ -136,9 +136,8 @@ async def test_dashboard_loading_error_is_wrapped_with_clear_context() -> None:
     with patch(
         "custom_components.dashboard_entity_checker.coordinator.load_dashboard",
         AsyncMock(side_effect=DashboardNotLoaded("Lovelace nicht verfügbar")),
+    ), pytest.raises(
+        UpdateFailed,
+        match="Dashboards konnten nicht geladen werden",
     ):
-        with pytest.raises(
-            UpdateFailed,
-            match="Dashboards konnten nicht geladen werden",
-        ):
-            await coordinator._async_scan_data()
+        await coordinator._async_scan_data()

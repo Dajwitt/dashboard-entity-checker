@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.helpers.selector import (
@@ -29,8 +28,8 @@ from .const import (
     DOMAIN,
     NAME,
 )
-from .dashboard import DashboardError, load_dashboard
 from .coordinator import _configured_ignored_entities
+from .dashboard import DashboardError, load_dashboard
 
 
 class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
