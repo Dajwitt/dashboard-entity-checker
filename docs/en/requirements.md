@@ -7,7 +7,7 @@
 | Home Assistant | 2026.7.0 |
 | HACS for HACS installation | 2.0.0 |
 
-Version 0.3.6 is a stable pre-1.0 release. Interfaces and attributes are intended to remain stable but can still change before version 1.0.
+Version 0.3.6 is the current stable release.
 
 ## Technical classification
 
