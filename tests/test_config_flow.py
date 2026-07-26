@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.selector import BooleanSelector, SelectSelector
 
 from custom_components.dashboard_entity_checker.config_flow import (
     DashboardEntityCheckerConfigFlow,
     DashboardEntityCheckerOptionsFlow,
     _get_dashboards,
-    _ignored_entities_text,
+    _ignored_entity_options,
     _include_unavailable_selections,
     _selected_dashboard_urls,
     _validate_dashboard_selection,
@@ -23,6 +25,7 @@ from custom_components.dashboard_entity_checker.const import (
     CONF_NOTIFICATIONS,
     CONF_SCAN_INTERVAL,
     DEFAULT_DASHBOARD,
+    DOMAIN,
 )
 from custom_components.dashboard_entity_checker.dashboard import DashboardNotFound
 
@@ -53,15 +56,74 @@ def test_selected_dashboard_urls_handles_current_and_legacy_data(
     assert _selected_dashboard_urls(data) == expected
 
 
-def test_form_helpers_preserve_missing_selection_and_ignore_text() -> None:
-    """Unavailable dashboards remain selectable and ignored IDs stay line based."""
+def test_form_helpers_preserve_missing_dashboard_selection() -> None:
+    """Unavailable dashboards remain selectable."""
     dashboards = {"one": "One"}
     _include_unavailable_selections(dashboards, ["one", "deleted"])
 
     assert dashboards == {"one": "One", "deleted": "deleted"}
-    assert _ignored_entities_text(
-        {CONF_IGNORED_ENTITIES: "sensor.two\nsensor.one\nsensor.two"}
-    ) == "sensor.two\nsensor.one"
+
+
+def test_ignore_options_tolerate_incomplete_scan_data() -> None:
+    """All HA entities are offered despite incomplete coordinator findings."""
+    hass = SimpleNamespace(
+        data={
+            er.DATA_REGISTRY: SimpleNamespace(
+                entities={
+                    "button.registry_only": object(),
+                    "sensor.shared": object(),
+                }
+            ),
+            DOMAIN: {
+                "entry-1": SimpleNamespace(
+                    data={
+                        "missing_entities": {},
+                        "ignored_matches": [
+                            None,
+                            {"entity": 4},
+                            {"entity": "sensor.valid_finding"},
+                        ],
+                    }
+                )
+            },
+        },
+        states=SimpleNamespace(
+            async_entity_ids=lambda: ["light.current_state", "sensor.shared"]
+        ),
+    )
+
+    with patch.object(er, "async_get", return_value=hass.data[er.DATA_REGISTRY]):
+        assert _ignored_entity_options(
+            hass,
+            "entry-1",
+            {CONF_IGNORED_ENTITIES: "sensor.configured"},
+        ) == [
+            "button.registry_only",
+            "light.current_state",
+            "sensor.configured",
+            "sensor.shared",
+            "sensor.valid_finding",
+        ]
+
+        hass.data[DOMAIN]["entry-1"].data = ["unexpected"]
+        assert _ignored_entity_options(
+            hass,
+            "entry-1",
+            {CONF_IGNORED_ENTITIES: "sensor.configured"},
+        ) == [
+            "button.registry_only",
+            "light.current_state",
+            "sensor.configured",
+            "sensor.shared",
+        ]
+
+
+def _schema_field(result, key):
+    """Return a form marker and validator by schema key."""
+    for marker, validator in result["data_schema"].schema.items():
+        if marker.schema == key:
+            return marker, validator
+    raise AssertionError(f"Missing schema field: {key}")
 
 
 @pytest.mark.asyncio
@@ -157,21 +219,26 @@ async def test_user_flow_shows_form_then_creates_entry() -> None:
     flow = DashboardEntityCheckerConfigFlow()
     flow.hass = SimpleNamespace(
         data={
+            er.DATA_REGISTRY: SimpleNamespace(entities={}),
             "lovelace": SimpleNamespace(
                 dashboards={
                     "one": SimpleNamespace(config={"title": "One"})
                 }
             )
-        }
+        },
+        states=SimpleNamespace(async_entity_ids=list),
     )
     valid = {
         CONF_DASHBOARDS: ["one"],
         CONF_SCAN_INTERVAL: 10,
         CONF_NOTIFICATIONS: False,
-        CONF_IGNORED_ENTITIES: "sensor.ignored",
+        CONF_IGNORED_ENTITIES: ["sensor.ignored"],
     }
 
-    with patch.object(flow, "_async_current_entries", return_value=[]):
+    with (
+        patch.object(flow, "_async_current_entries", return_value=[]),
+        patch.object(er, "async_get", return_value=flow.hass.data[er.DATA_REGISTRY]),
+    ):
         form = await flow.async_step_user()
         with patch(
             "custom_components.dashboard_entity_checker.config_flow.load_dashboard",
@@ -186,18 +253,62 @@ async def test_user_flow_shows_form_then_creates_entry() -> None:
 
 
 @pytest.mark.asyncio
+async def test_user_flow_uses_modern_ignore_and_notification_selectors() -> None:
+    """Setup offers every state and registry entity in the searchable selector."""
+    flow = DashboardEntityCheckerConfigFlow()
+    flow.hass = SimpleNamespace(
+        data={
+            er.DATA_REGISTRY: SimpleNamespace(
+                entities={"button.registry_only": object()}
+            )
+        },
+        states=SimpleNamespace(
+            async_entity_ids=lambda: ["light.current_state"]
+        ),
+    )
+
+    with (
+        patch.object(flow, "_async_current_entries", return_value=[]),
+        patch.object(er, "async_get", return_value=flow.hass.data[er.DATA_REGISTRY]),
+    ):
+        result = await flow.async_step_user()
+
+    _, notifications = _schema_field(result, CONF_NOTIFICATIONS)
+    ignored_marker, ignored_entities = _schema_field(
+        result, CONF_IGNORED_ENTITIES
+    )
+
+    assert isinstance(notifications, BooleanSelector)
+    assert isinstance(ignored_entities, SelectSelector)
+    assert ignored_entities.config["options"] == [
+        "button.registry_only",
+        "light.current_state",
+    ]
+    assert ignored_entities.config["multiple"] is True
+    assert ignored_entities.config["custom_value"] is True
+    assert ignored_entities.config["mode"] == "dropdown"
+    assert ignored_marker.description == {"suggested_value": []}
+
+
+@pytest.mark.asyncio
 async def test_user_flow_redisplays_validation_errors() -> None:
     """Invalid dashboard and ignore values remain visible in the form."""
     flow = DashboardEntityCheckerConfigFlow()
-    flow.hass = SimpleNamespace(data={})
+    flow.hass = SimpleNamespace(
+        data={er.DATA_REGISTRY: SimpleNamespace(entities={})},
+        states=SimpleNamespace(async_entity_ids=list),
+    )
     invalid = {
         CONF_DASHBOARDS: [],
         CONF_SCAN_INTERVAL: 5,
         CONF_NOTIFICATIONS: True,
-        CONF_IGNORED_ENTITIES: "invalid",
+        CONF_IGNORED_ENTITIES: ["invalid"],
     }
 
-    with patch.object(flow, "_async_current_entries", return_value=[]):
+    with (
+        patch.object(flow, "_async_current_entries", return_value=[]),
+        patch.object(er, "async_get", return_value=flow.hass.data[er.DATA_REGISTRY]),
+    ):
         result = await flow.async_step_user(invalid)
 
     assert result["type"] is FlowResultType.FORM
@@ -213,7 +324,96 @@ async def test_options_flow_uses_current_values_and_saves_changes() -> None:
     entry = SimpleNamespace(
         entry_id="entry-1",
         data={CONF_DASHBOARDS: ["one"], CONF_SCAN_INTERVAL: 5},
-        options={CONF_NOTIFICATIONS: True, CONF_IGNORED_ENTITIES: ""},
+        options={
+            CONF_NOTIFICATIONS: True,
+            CONF_IGNORED_ENTITIES: "sensor.old_ignore",
+        },
+    )
+    hass = SimpleNamespace(
+        data={
+            er.DATA_REGISTRY: SimpleNamespace(
+                entities={"button.registry_only": object()}
+            ),
+            "lovelace": SimpleNamespace(
+                dashboards={"one": SimpleNamespace(config={"title": "One"})}
+            ),
+            "dashboard_entity_checker": {
+                "entry-1": SimpleNamespace(
+                    data={
+                        "missing_entities": [
+                            {
+                                "entity": "sensor.current_missing",
+                                "locations": [],
+                            }
+                        ],
+                        "ignored_matches": [
+                            {
+                                "entity": "sensor.previously_ignored",
+                                "locations": [],
+                            }
+                        ],
+                    }
+                )
+            },
+        },
+        states=SimpleNamespace(
+            async_entity_ids=lambda: ["light.current_state"]
+        ),
+        config_entries=_FlowConfigEntries(entry),
+    )
+    flow = DashboardEntityCheckerOptionsFlow()
+    flow.hass = hass
+    flow.handler = "entry-1"
+    changed = {
+        CONF_DASHBOARDS: ["one"],
+        CONF_SCAN_INTERVAL: 15,
+        CONF_NOTIFICATIONS: False,
+        CONF_IGNORED_ENTITIES: ["sensor.ignored"],
+    }
+
+    with patch.object(
+        er, "async_get", return_value=hass.data[er.DATA_REGISTRY]
+    ):
+        form = await flow.async_step_init()
+    with patch(
+        "custom_components.dashboard_entity_checker.config_flow.load_dashboard",
+        AsyncMock(return_value={"views": []}),
+    ):
+        created = await flow.async_step_init(changed)
+
+    assert form["type"] is FlowResultType.FORM
+    assert form["step_id"] == "init"
+    _, notifications = _schema_field(form, CONF_NOTIFICATIONS)
+    ignored_marker, ignored_entities = _schema_field(
+        form, CONF_IGNORED_ENTITIES
+    )
+    assert isinstance(notifications, BooleanSelector)
+    assert isinstance(ignored_entities, SelectSelector)
+    assert set(ignored_entities.config["options"]) == {
+        "button.registry_only",
+        "light.current_state",
+        "sensor.current_missing",
+        "sensor.old_ignore",
+        "sensor.previously_ignored",
+    }
+    assert ignored_marker.description == {
+        "suggested_value": ["sensor.old_ignore"]
+    }
+    assert created["type"] is FlowResultType.CREATE_ENTRY
+    assert created["data"] == changed
+
+
+@pytest.mark.asyncio
+async def test_options_flow_can_clear_legacy_ignore_text() -> None:
+    """An omitted selector value clears a legacy string setting."""
+    entry = SimpleNamespace(
+        entry_id="entry-1",
+        data={
+            CONF_DASHBOARDS: ["one"],
+            CONF_SCAN_INTERVAL: 5,
+            CONF_IGNORED_ENTITIES: "sensor.old_ignore",
+        },
+        options={CONF_NOTIFICATIONS: True},
     )
     hass = SimpleNamespace(
         data={
@@ -226,21 +426,18 @@ async def test_options_flow_uses_current_values_and_saves_changes() -> None:
     flow = DashboardEntityCheckerOptionsFlow()
     flow.hass = hass
     flow.handler = "entry-1"
-    changed = {
-        CONF_DASHBOARDS: ["one"],
-        CONF_SCAN_INTERVAL: 15,
-        CONF_NOTIFICATIONS: False,
-        CONF_IGNORED_ENTITIES: "sensor.ignored",
-    }
 
-    form = await flow.async_step_init()
     with patch(
         "custom_components.dashboard_entity_checker.config_flow.load_dashboard",
         AsyncMock(return_value={"views": []}),
     ):
-        created = await flow.async_step_init(changed)
+        created = await flow.async_step_init(
+            {
+                CONF_DASHBOARDS: ["one"],
+                CONF_SCAN_INTERVAL: 5,
+                CONF_NOTIFICATIONS: True,
+            }
+        )
 
-    assert form["type"] is FlowResultType.FORM
-    assert form["step_id"] == "init"
     assert created["type"] is FlowResultType.CREATE_ENTRY
-    assert created["data"] == changed
+    assert created["data"][CONF_IGNORED_ENTITIES] == []

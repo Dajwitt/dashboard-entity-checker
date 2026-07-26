@@ -7,8 +7,11 @@
         "data": {
           "dashboard_url_paths": "Zu prüfende Dashboards",
           "scan_interval": "Prüfintervall (Minuten)",
-          "notifications": "Benachrichtigungen aktivieren",
-          "ignored_entities": "Ignorierte Entity-IDs (eine pro Zeile)"
+          "notifications": "Persistente Benachrichtigungen",
+          "ignored_entities": "Exakt zu ignorierende Entity-IDs"
+        },
+        "data_description": {
+          "ignored_entities": "Alle Home-Assistant-Entities durchsuchen oder exakte Entity-IDs eingeben. Platzhalter werden nicht unterstützt."
         }
       }
     },
@@ -18,7 +21,7 @@
     "error": {
       "dashboard_not_found": "Mindestens ein ausgewähltes Dashboard konnte nicht geladen werden.",
       "no_dashboard_selected": "Wähle mindestens ein Dashboard aus.",
-      "invalid_entity_id": "Gib nur gültige Entity-IDs ein, jeweils eine pro Zeile."
+      "invalid_entity_id": "Mindestens eine ignorierte Entity-ID ist ungültig."
     }
   },
   "options": {
@@ -29,10 +32,16 @@
         "data": {
           "dashboard_url_paths": "Zu prüfende Dashboards",
           "scan_interval": "Prüfintervall (Minuten)",
-          "notifications": "Benachrichtigungen aktivieren",
-          "ignored_entities": "Ignorierte Entity-IDs (eine pro Zeile)"
+          "notifications": "Persistente Benachrichtigungen",
+          "ignored_entities": "Exakt zu ignorierende Entity-IDs"
+        },
+        "data_description": {
+          "ignored_entities": "Alle Home-Assistant-Entities durchsuchen oder exakte Entity-IDs eingeben. Platzhalter werden nicht unterstützt."
         }
       }
+    },
+    "error": {
+      "invalid_entity_id": "Mindestens eine ignorierte Entity-ID ist ungültig."
     }
   }
 }

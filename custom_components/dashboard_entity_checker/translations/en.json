@@ -7,8 +7,11 @@
         "data": {
           "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
-          "notifications": "Enable notifications",
-          "ignored_entities": "Ignored entity IDs (one per line)"
+          "notifications": "Persistent notifications",
+          "ignored_entities": "Exact entity IDs to ignore"
+        },
+        "data_description": {
+          "ignored_entities": "Search all Home Assistant entities or enter exact entity IDs. Wildcards are not supported."
         }
       }
     },
@@ -18,7 +21,7 @@
     "error": {
       "dashboard_not_found": "At least one selected dashboard could not be loaded.",
       "no_dashboard_selected": "Select at least one dashboard.",
-      "invalid_entity_id": "Enter valid entity IDs only, one per line."
+      "invalid_entity_id": "At least one ignored entity ID is invalid."
     }
   },
   "options": {
@@ -29,10 +32,16 @@
         "data": {
           "dashboard_url_paths": "Dashboards to scan",
           "scan_interval": "Scan interval (minutes)",
-          "notifications": "Enable notifications",
-          "ignored_entities": "Ignored entity IDs (one per line)"
+          "notifications": "Persistent notifications",
+          "ignored_entities": "Exact entity IDs to ignore"
+        },
+        "data_description": {
+          "ignored_entities": "Search all Home Assistant entities or enter exact entity IDs. Wildcards are not supported."
         }
       }
+    },
+    "error": {
+      "invalid_entity_id": "At least one ignored entity ID is invalid."
     }
   }
 }

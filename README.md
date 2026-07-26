@@ -25,6 +25,14 @@ The dashboard selector is intentional: you can scan only the custom or problem-p
 > [!IMPORTANT]
 > This project is currently a pre-1.0 public release and is not yet included in the default HACS catalog. Install it as a **custom HACS repository** using the instructions below.
 
+## Documentation
+
+- [Bilingual GitHub Pages documentation](https://dajwitt.github.io/dashboard-entity-checker/)
+- [English documentation](docs/en/index.md)
+- [Deutsche Dokumentation](docs/de/index.md)
+
+The same Markdown sources build the bilingual GitHub Pages site. The generated page and its current version are checked in CI so they cannot silently fall behind the repository documentation or integration manifest.
+
 ## What counts as missing?
 
 An entity is reported only when it exists in neither:
@@ -102,7 +110,7 @@ After installation and restart:
 4. Select one or more dashboards.
 5. Set the scan interval in minutes. The default is 5 minutes.
 6. Enable or disable persistent notifications.
-7. Optionally enter exact entity IDs to ignore, one per line.
+7. Optionally search all Home Assistant entities and select or enter exact entity IDs to ignore.
 
 Configuration and later changes are handled through Home Assistant's Config Flow and Options Flow. No YAML configuration is required.
 
@@ -194,6 +202,7 @@ Do not post access tokens, passwords or private Home Assistant URLs.
 
 ## Release status
 
+- **v0.3.6:** native notification switch, searchable exact-ignore selector containing all state-machine and entity-registry entities, and bilingual Pages documentation
 - **v0.3.5:** detect malformed scalar entity references with accidental extra dot-separated suffixes
 - **v0.3.4:** v1.0 quality gate with expanded HA integration tests, enforced coverage and Ruff CI
 - **v0.3.3:** new Nested Scan brand icon
