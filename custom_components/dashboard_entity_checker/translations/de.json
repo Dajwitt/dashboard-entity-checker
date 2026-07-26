@@ -11,7 +11,7 @@
           "ignored_entities": "Exakt zu ignorierende Entity-IDs"
         },
         "data_description": {
-          "ignored_entities": "Exakte Entity-IDs auswählen oder eingeben. Platzhalter werden nicht unterstützt."
+          "ignored_entities": "Alle Home-Assistant-Entities durchsuchen oder exakte Entity-IDs eingeben. Platzhalter werden nicht unterstützt."
         }
       }
     },
@@ -36,7 +36,7 @@
           "ignored_entities": "Exakt zu ignorierende Entity-IDs"
         },
         "data_description": {
-          "ignored_entities": "Aktuelle Funde auswählen oder exakte Entity-IDs eingeben. Platzhalter werden nicht unterstützt."
+          "ignored_entities": "Alle Home-Assistant-Entities durchsuchen oder exakte Entity-IDs eingeben. Platzhalter werden nicht unterstützt."
         }
       }
     },

@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback, valid_entity_id
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
     BooleanSelectorConfig,
@@ -66,6 +67,7 @@ class DashboardEntityCheckerConfigFlow(ConfigFlow, domain=DOMAIN):
                 DEFAULT_SCAN_INTERVAL,
                 DEFAULT_NOTIFICATIONS,
                 _configured_ignored_entities(user_input or {}),
+                ignored_options=_all_entity_options(self.hass),
             ),
             errors=errors,
         )
@@ -192,8 +194,9 @@ def _validate_ignored_entities(user_input: dict[str, Any]) -> dict[str, str]:
 def _ignored_entity_options(
     hass: Any, entry_id: str, values: dict[str, Any]
 ) -> list[str]:
-    """Return current findings and configured IDs for the searchable selector."""
-    options = set(_configured_ignored_entities(values))
+    """Return every HA entity plus findings and configured IDs."""
+    options = set(_all_entity_options(hass))
+    options.update(_configured_ignored_entities(values))
     coordinator = hass.data.get(DOMAIN, {}).get(entry_id)
     scan = getattr(coordinator, "data", None) or {}
     if not isinstance(scan, dict):
@@ -209,6 +212,13 @@ def _ignored_entity_options(
             and isinstance(item.get("entity"), str)
             and item["entity"]
         )
+    return sorted(options)
+
+
+def _all_entity_options(hass: Any) -> list[str]:
+    """Return the union of current states and all entity registry entries."""
+    options = set(hass.states.async_entity_ids())
+    options.update(er.async_get(hass).entities)
     return sorted(options)
 
 

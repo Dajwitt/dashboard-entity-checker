@@ -11,7 +11,7 @@
           "ignored_entities": "Exact entity IDs to ignore"
         },
         "data_description": {
-          "ignored_entities": "Select or enter exact entity IDs. Wildcards are not supported."
+          "ignored_entities": "Search all Home Assistant entities or enter exact entity IDs. Wildcards are not supported."
         }
       }
     },
@@ -36,7 +36,7 @@
           "ignored_entities": "Exact entity IDs to ignore"
         },
         "data_description": {
-          "ignored_entities": "Select current findings or enter exact entity IDs. Wildcards are not supported."
+          "ignored_entities": "Search all Home Assistant entities or enter exact entity IDs. Wildcards are not supported."
         }
       }
     },
