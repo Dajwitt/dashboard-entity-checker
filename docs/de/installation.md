@@ -1,6 +1,6 @@
 # Installation
 
-Dashboard Entity Checker ist eine Custom-Integration. Version 0.3.6 ist der aktuelle stabile Pre-1.0-Release und noch nicht im Standard-HACS-Katalog enthalten.
+Dashboard Entity Checker ist eine Custom-Integration. Version 0.3.6 ist der aktuelle stabile Release und noch nicht im Standard-HACS-Katalog enthalten.
 
 ## Voraussetzungen
 

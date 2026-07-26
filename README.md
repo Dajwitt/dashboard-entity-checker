@@ -1,7 +1,7 @@
 # Dashboard Entity Checker
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://www.hacs.xyz/docs/faq/custom_repositories/)
-[![Validate](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml/badge.svg)](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml)
+[![Home Assistant validation](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml/badge.svg)](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/validate.yml)
 [![Tests](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/tests.yml/badge.svg)](https://github.com/Dajwitt/dashboard-entity-checker/actions/workflows/tests.yml)
 
 Dashboard Entity Checker is a local Home Assistant custom integration that checks selected Lovelace dashboards for entity references that no longer exist.
@@ -23,7 +23,7 @@ It is therefore primarily useful for:
 The dashboard selector is intentional: you can scan only the custom or problem-prone dashboards that need this deeper analysis, or select several dashboards when you want broader coverage. This integration is not affiliated with Spook and does not replace Spook's wider Home Assistant repair and maintenance checks.
 
 > [!IMPORTANT]
-> This project is currently a pre-1.0 public release and is not yet included in the default HACS catalog. Install it as a **custom HACS repository** using the instructions below.
+> This is a stable public release and is not yet included in the default HACS catalog. Install it as a **custom HACS repository** using the instructions below.
 
 ## Documentation
 
@@ -210,3 +210,7 @@ Do not post access tokens, passwords or private Home Assistant URLs.
 - **v0.3.1:** ignore list can be cleared completely
 - **v0.3.0:** multiple dashboards, nested Decluttering resolution, ignore list and result-change events
 - **Next milestone:** v1.0 release hardening, documented limits and default HACS catalog submission readiness
+
+## License
+
+MIT. See [LICENSE](LICENSE).
