@@ -11,8 +11,6 @@ The documentation is bilingual and keeps Markdown as the single source of truth.
 - `site/index.html` — generated self-contained GitHub Pages site
 - `site/.nojekyll` — disables Jekyll processing
 
-The separate community-post draft is kept outside the public documentation tree under `arbeitsstand/forumsbeitrag-entwurf.md`.
-
 ## Update workflow
 
 1. Update the matching page in both `en/` and `de/`.
