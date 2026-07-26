@@ -7,7 +7,7 @@
 | Home Assistant | 2026.7.0 |
 | HACS für HACS-Installation | 2.0.0 |
 
-Version 0.3.6b2 ist eine Preview-Version vor dem nächsten stabilen Pre-1.0-Release. Schnittstellen und Attribute sollen stabil bleiben, können sich vor Version 1.0 aber noch ändern.
+Version 0.3.6 ist ein stabiler Pre-1.0-Release. Schnittstellen und Attribute sollen stabil bleiben, können sich vor Version 1.0 aber noch ändern.
 
 ## Technische Einordnung
 
@@ -33,7 +33,7 @@ Der Scan läuft lokal in Home Assistant. Die Integration selbst benötigt für d
 
 | Version | Schwerpunkt |
 |---|---|
-| 0.3.6b2 | Preview: native Optionen und Suche über alle Home-Assistant-Entities |
+| 0.3.6 | native Optionen und Suche über alle Home-Assistant-Entities |
 | 0.3.5 | vollständige Erkennung versehentlich angehängter Punkt-Suffixe |
 | 0.3.4 | erweiterte Tests, Coverage-Grenze und Ruff-Prüfung |
 | 0.3.3 | Projekt- und Integrationssymbol |

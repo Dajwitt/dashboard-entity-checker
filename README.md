@@ -202,7 +202,7 @@ Do not post access tokens, passwords or private Home Assistant URLs.
 
 ## Release status
 
-- **v0.3.6b2 preview:** native notification switch, searchable exact-ignore selector containing all state-machine and entity-registry entities, and bilingual Pages documentation
+- **v0.3.6:** native notification switch, searchable exact-ignore selector containing all state-machine and entity-registry entities, and bilingual Pages documentation
 - **v0.3.5:** detect malformed scalar entity references with accidental extra dot-separated suffixes
 - **v0.3.4:** v1.0 quality gate with expanded HA integration tests, enforced coverage and Ruff CI
 - **v0.3.3:** new Nested Scan brand icon

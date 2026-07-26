@@ -7,7 +7,7 @@
 | Home Assistant | 2026.7.0 |
 | HACS for HACS installation | 2.0.0 |
 
-Version 0.3.6b2 is a preview of the next stable pre-1.0 release. Interfaces and attributes are intended to remain stable but can still change before version 1.0.
+Version 0.3.6 is a stable pre-1.0 release. Interfaces and attributes are intended to remain stable but can still change before version 1.0.
 
 ## Technical classification
 
@@ -33,7 +33,7 @@ Scanning runs locally in Home Assistant. The integration itself requires no clou
 
 | Version | Focus |
 |---|---|
-| 0.3.6b2 | Preview: native options and search across all Home Assistant entities |
+| 0.3.6 | native options and search across all Home Assistant entities |
 | 0.3.5 | complete detection of accidentally appended dot suffixes |
 | 0.3.4 | expanded tests, coverage threshold, and Ruff checks |
 | 0.3.3 | project and integration icon |

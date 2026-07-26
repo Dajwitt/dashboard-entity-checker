@@ -2,7 +2,7 @@
 
 DOMAIN = "dashboard_entity_checker"
 NAME = "Dashboard Entity Checker"
-VERSION = "0.3.6b2"
+VERSION = "0.3.6"
 
 CONF_DASHBOARD = "dashboard_url_path"
 CONF_DASHBOARDS = "dashboard_url_paths"

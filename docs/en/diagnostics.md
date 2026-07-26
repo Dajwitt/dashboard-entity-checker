@@ -18,7 +18,7 @@ If the coordinator is unavailable when diagnostics are downloaded, the integrati
 
 ```json
 {
-  "integration_version": "0.3.6b2",
+  "integration_version": "0.3.6",
   "dashboards": ["example-main", "example-tablet"],
   "dashboards_loaded": ["example-main"],
   "dashboard_errors": [
