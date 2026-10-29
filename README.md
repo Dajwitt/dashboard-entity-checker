@@ -179,6 +179,7 @@ Download diagnostics from the integration menu under **Settings → Devices & se
 - JavaScript is analyzed as text; it is not executed.
 - Fully dynamic entity IDs such as template-literal fragments cannot be resolved safely and are ignored.
 - Only references present in dashboard configuration or supported template expansion can be checked.
+- Frontend-generated Strategy dashboards are not resolved: an empty scan/OK is not proof that their generated references are valid.
 - Decluttering variables that cannot be resolved are reported as template diagnostics rather than guessed.
 - JavaScript comments are intentionally scanned because stale entity references are often left there.
 - The integration reports problems but does not edit dashboards or offer automatic repairs.
@@ -187,6 +188,19 @@ Download diagnostics from the integration menu under **Settings → Devices & se
 
 - Home Assistant 2026.7.0 or newer
 - HACS 2.0.0 or newer for HACS installation
+
+These are retained minimum versions, not the current test baseline; use a current
+HACS release. Regular CI now tests HA **2026.10.4**. Separate local real-Core tests
+on **2026.11.0b0/b1** passed 87 existing tests plus 7 runtime tests per version
+(94 passed, 96.32% coverage). Both November versions are **beta**, not final HA.
+The existing integration also passed targeted live b0 scans, ignore, notification
+create/update/dismiss and options reload; no runtime fix or integration version
+bump was needed. Browser rendering and full Recorder persistence are not certified.
+
+The built-in Marketplace in HA November beta is distinct from HACS. This project
+does not claim a separately tested Marketplace installation for Dashboard Entity
+Checker; the documented HACS route remains valid. Read the Marketplace's
+community-extension risk notice yourself before using that alternative.
 
 ## Support
 
