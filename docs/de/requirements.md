@@ -9,6 +9,26 @@
 
 Version 0.3.6 ist der aktuelle stabile Release.
 
+Die Tabelle nennt erhaltene Mindestversionen, nicht die neuesten Teststände;
+eine aktuelle HACS-Version verwenden. Reguläre CI nutzt HA **2026.10.4** statt
+des alten Test-Pins 2026.7.2. Separate echte Core-Tests unter **2026.11.0b0/b1**
+bestanden je 87 bestehende und 7 Runtime-Tests (94 bestanden, 96,32 % Coverage).
+Beide November-Versionen bleiben Beta. Kein inkompatibles Oktober-HA-Pytest-Plugin
+wurde in diese Umgebungen gezwungen.
+CI wiederholt außerdem die 87 bestehenden Tests unter b0/b1; die sieben zusätzlichen
+Core-Harnesstests bleiben eine separate lokale Abnahme, nicht Teil dieser CI-Zahl.
+
+Gezielte Live-Scans, Ignore, Notification create/update/dismiss und Optionsreload
+unter b0 bestanden mit unverändertem Integrationscode. Browserdarstellung und
+Recorder-Persistenz sind nicht zertifiziert. Frontend-generierte Strategy-Dashboards
+werden nicht aufgelöst: Ein leerer Scan/OK bestätigt nicht deren generierte Inhalte.
+
+Der integrierte Marketplace der November-Beta ist von HACS getrennt. Eine separate
+Marketplace-Installation des Dashboard Entity Checker wurde nicht geprüft; keine
+Marketplace-Zertifizierung behauptet. Dessen Community-Erweiterungs-Risikoerklärung
+vor Nutzung selbst lesen. Diese Dokumentations-/Teststandpflege enthält weder
+Versionsbump noch Runtimefix.
+
 ## Technische Einordnung
 
 | Eigenschaft | Wert |

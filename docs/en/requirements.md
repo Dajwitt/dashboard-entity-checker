@@ -9,6 +9,25 @@
 
 Version 0.3.6 is the current stable release.
 
+The table lists retained minimums, not the newest tested versions; use a current
+HACS release. Regular CI uses HA **2026.10.4**, replacing the old 2026.7.2 test pin.
+Separate real-Core tests on **2026.11.0b0/b1** each passed 87 existing tests and
+7 runtime tests (94 passed, 96.32% coverage). Both November versions remain beta.
+No incompatible October HA pytest plugin was forced into those environments.
+CI also repeats the 87 existing tests on b0/b1; the additional seven real-Core
+harness tests remain a separate local acceptance, not part of that CI count.
+
+Targeted live b0 scans, ignore behavior, notification create/update/dismiss and
+options reload passed with unchanged integration code. Browser rendering and
+Recorder persistence are not certified. Frontend-generated Strategy dashboards
+are not resolved: an empty scan/OK does not certify their generated contents.
+
+HA November beta's built-in Marketplace is separate from HACS. A separate
+Dashboard Entity Checker Marketplace installation was not tested; this is not
+a claim of Marketplace certification. Read its community-extension risk notice
+yourself before using that alternative. No version bump or runtime fix accompanies
+this documentation/test-baseline maintenance.
+
 ## Technical classification
 
 | Property | Value |

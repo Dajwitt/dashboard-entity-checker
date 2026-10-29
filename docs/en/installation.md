@@ -10,6 +10,9 @@ Dashboard Entity Checker is a custom integration. Version 0.3.6 is the current s
 
 ## Install with HACS
 
+The versions above are minimums; use current HACS. See [tested versions and beta
+Marketplace boundaries](./requirements.md) for the distinct installation channels.
+
 HACS must already be installed and working.
 
 [Open the custom repository in Home Assistant](https://my.home-assistant.io/redirect/hacs_repository/?owner=Dajwitt&repository=dashboard-entity-checker&category=integration)

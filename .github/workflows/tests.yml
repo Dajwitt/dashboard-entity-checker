@@ -9,6 +9,9 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        core: ["2026.10.4", "2026.11.0b0", "2026.11.0b1"]
     steps:
       - uses: actions/checkout@v7
 
@@ -20,7 +23,8 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "homeassistant==2026.7.2" pytest pytest-asyncio pytest-cov ruff
+          pip install "homeassistant==${{ matrix.core }}" "pytest==9.2.0" "pytest-asyncio==1.4.1" "pytest-cov==7.1.0" ruff
+          pip check
 
       - name: Run Ruff lint
         run: ruff check custom_components tests
