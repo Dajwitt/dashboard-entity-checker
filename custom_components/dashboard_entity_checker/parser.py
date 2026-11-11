@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from jinja2 import Environment, TemplateSyntaxError, nodes
+
 from .const import ENTITY_DOMAINS
 
 MAX_TEMPLATE_DEPTH = 20
@@ -181,7 +183,80 @@ def _collect_entities(
         found.add(value)
         return
 
-    _collect_javascript_entities(value, found, key)
+    if any(marker in value for marker in ("{{", "{%", "{#")):
+        _collect_jinja_entities(value, found, key)
+    else:
+        _collect_javascript_entities(value, found, key)
+
+
+def _collect_jinja_entities(text: str, found: set[str], key: str | None) -> None:
+    """Inspect Jinja syntax without rendering or treating it as JavaScript.
+
+    Concatenation operands and replace literals are string fragments, even
+    when they happen to look like complete entity IDs. Nested state lookups
+    and literal entity lists are still static references worth checking.
+    """
+    try:
+        tree = Environment(extensions=["jinja2.ext.loopcontrols"]).parse(text)
+    except TemplateSyntaxError:
+        # Never fall back to the broad JavaScript scan for invalid Jinja.
+        return
+
+    fragments: set[int] = set()
+    for node in tree.find_all((nodes.Concat, nodes.Add, nodes.Call, nodes.Filter)):
+        operands: list[nodes.Node | None] = []
+        if isinstance(node, nodes.Concat):
+            operands = [*node.nodes]
+        elif isinstance(node, nodes.Add):
+            operands = [node.left, node.right]
+        elif isinstance(node, nodes.Call):
+            if isinstance(node.node, nodes.Getattr) and node.node.attr == "replace":
+                operands = [node.node.node, *node.args]
+                operands.extend(keyword.value for keyword in node.kwargs)
+        elif node.name == "replace":
+            operands = [node.node, *node.args]
+            operands.extend(keyword.value for keyword in node.kwargs)
+        fragments.update(
+            id(operand) for operand in operands if isinstance(operand, nodes.Const)
+        )
+
+    explicit_literals: set[int] = set()
+    for node in tree.find_all((nodes.Call, nodes.Getitem)):
+        if isinstance(node, nodes.Call):
+            if (
+                isinstance(node.node, nodes.Name)
+                and node.node.name in {
+                    "states", "is_state", "is_state_attr", "state_attr", "has_value"
+                }
+                and node.args
+            ):
+                explicit_literals.add(id(node.args[0]))
+        elif isinstance(node.node, nodes.Name) and node.node.name == "states":
+            explicit_literals.add(id(node.arg))
+
+    for node in tree.find_all(nodes.Const):
+        if (
+            id(node) not in fragments
+            and (key not in _NON_ENTITY_TEXT_KEYS or id(node) in explicit_literals)
+            and isinstance(node.value, str)
+            and _ENTITY_ID_RE.fullmatch(node.value)
+        ):
+            found.add(node.value)
+
+    for node in tree.find_all(nodes.Getattr):
+        domain = node.node
+        if (
+            isinstance(domain, nodes.Getattr)
+            and isinstance(domain.node, nodes.Name)
+            and domain.node.name == "states"
+        ):
+            entity_id = f"{domain.attr}.{node.attr}"
+            if _ENTITY_ID_RE.fullmatch(entity_id):
+                found.add(entity_id)
+
+    # Preserve embedded JavaScript outside Jinja blocks, not inside its strings.
+    for node in tree.find_all(nodes.TemplateData):
+        _collect_javascript_entities(node.data, found, key)
 
 
 def _collect_decluttering_card(
