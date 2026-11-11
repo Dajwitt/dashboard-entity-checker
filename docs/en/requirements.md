@@ -7,7 +7,7 @@
 | Home Assistant | 2026.7.0 |
 | HACS for HACS installation | 2.0.0 |
 
-Version 0.3.6 is the current stable release.
+Version 0.3.7 is the current stable release.
 
 The table lists retained minimums, not the newest tested versions; use a current
 HACS release. Regular CI uses HA **2026.10.4**, replacing the old 2026.7.2 test pin.
@@ -52,6 +52,7 @@ Scanning runs locally in Home Assistant. The integration itself requires no clou
 
 | Version | Focus |
 |---|---|
+| 0.3.7 | avoid false entity findings for dynamic Jinja fragments |
 | 0.3.6 | native options and search across all Home Assistant entities |
 | 0.3.5 | complete detection of accidentally appended dot suffixes |
 | 0.3.4 | expanded tests, coverage threshold, and Ruff checks |

@@ -18,7 +18,7 @@ Ist der Coordinator beim Download nicht verfügbar, erzeugt die Integration eine
 
 ```json
 {
-  "integration_version": "0.3.6",
+  "integration_version": "0.3.7",
   "dashboards": ["example-main", "example-tablet"],
   "dashboards_loaded": ["example-main"],
   "dashboard_errors": [
