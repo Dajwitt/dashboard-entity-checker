@@ -1,6 +1,6 @@
 # Dashboard Entity Checker
 
-**Dokumentation für Version 0.3.6** · Home-Assistant-Custom-Integration
+**Dokumentation für Version 0.3.7** · Home-Assistant-Custom-Integration
 
 Dashboard Entity Checker prüft ausgewählte Lovelace-Dashboards auf Entity-Referenzen, die weder in Home Assistants State-Machine noch in der Entity Registry vorhanden sind.
 

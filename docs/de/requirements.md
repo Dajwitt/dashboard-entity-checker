@@ -7,7 +7,7 @@
 | Home Assistant | 2026.7.0 |
 | HACS für HACS-Installation | 2.0.0 |
 
-Version 0.3.6 ist der aktuelle stabile Release.
+Version 0.3.7 ist der aktuelle stabile Release.
 
 Die Tabelle nennt erhaltene Mindestversionen, nicht die neuesten Teststände;
 eine aktuelle HACS-Version verwenden. Reguläre CI nutzt HA **2026.10.4** statt
@@ -53,6 +53,7 @@ Der Scan läuft lokal in Home Assistant. Die Integration selbst benötigt für d
 
 | Version | Schwerpunkt |
 |---|---|
+| 0.3.7 | keine falschen Entity-Funde für dynamische Jinja-Fragmente |
 | 0.3.6 | native Optionen und Suche über alle Home-Assistant-Entities |
 | 0.3.5 | vollständige Erkennung versehentlich angehängter Punkt-Suffixe |
 | 0.3.4 | erweiterte Tests, Coverage-Grenze und Ruff-Prüfung |
